@@ -1215,14 +1215,14 @@ PetalburgCity_Gym_Text_WallyThankYou:
 	.string "my POKéMON.\p"
 	.string "I promise I'll take really good\n"
 	.string "care of it.\p"
-	.string "Here, take this as thanks! It's my\n"
-	.string "POKéNAV.$"
+	.string "Here, take this as thanks! It's a\n"
+	.string "DEXNAV I've never used...$"
 
 PetalburgCity_Gym_Text_WallyPokenav:
-	.string "{PLAYER} received the POKéNAV!$"
+	.string "{PLAYER} received the DEXNAV!$"
 
 PetalburgCity_Gym_Text_WallyThankYouBye:
-	.string "Maybe it can help you catch new\n"
+	.string "It can help you catch new\n"
 	.string "POKémon just like you helped me!$"
 	.string "Oh! My mom's waiting for me,\n"
 	.string "so I have to go!\p"

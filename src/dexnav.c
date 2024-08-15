@@ -2044,7 +2044,7 @@ static void DrawSpeciesIcons(void)
         species = sDexNavUiDataPtr->hiddenSpecies[i];
         x = ROW_HIDDEN_ICON_X + 24 * i;
         y = ROW_HIDDEN_ICON_Y;
-        if (FlagGet(FLAG_SYS_DETECTOR_MODE))
+        if (FlagGet(FLAG_SYS_DEXNAV_DETECTOR_MODE))
             TryDrawIconInSlot(species, x, y);
        else if (species == SPECIES_NONE || species > NUM_SPECIES)
             CreateNoDataIcon(x, y);
@@ -2069,7 +2069,7 @@ static u16 DexNavGetSpecies(void)
         species = sDexNavUiDataPtr->landSpecies[sDexNavUiDataPtr->cursorCol + COL_LAND_COUNT];
         break;
     case ROW_HIDDEN:
-        if (!FlagGet(FLAG_SYS_DETECTOR_MODE))
+        if (!FlagGet(FLAG_SYS_DEXNAV_DETECTOR_MODE))
             species = SPECIES_NONE;
         else
             species = sDexNavUiDataPtr->hiddenSpecies[sDexNavUiDataPtr->cursorCol];
@@ -2524,7 +2524,7 @@ bool8 TryFindHiddenPokemon(void)
     u32 attempts = 0;
     u16 currSteps;
 
-    if (!FlagGet(FLAG_SYS_DETECTOR_MODE) || FlagGet(FLAG_SYS_DEXNAV_SEARCH) || GetFlashLevel() > 0)
+    if (!FlagGet(FLAG_SYS_DEXNAV_DETECTOR_MODE) || FlagGet(FLAG_SYS_DEXNAV_SEARCH) || GetFlashLevel() > 0)
     {
         (*stepPtr) = 0;
         return FALSE;
