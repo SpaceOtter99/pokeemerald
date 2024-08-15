@@ -80,6 +80,11 @@ PetalburgCity_Gym_OnFrame:
 PetalburgCity_Gym_EventScript_ReturnFromWallyTutorial::
 	lockall
 	msgbox PetalburgCity_Gym_Text_DadSoDidItWorkOut, MSGBOX_DEFAULT
+	msgbox PetalburgCity_Gym_Text_WallyThankYou, MSGBOX_DEFAULT
+	playfanfare MUS_OBTAIN_ITEM
+	msgbox PetalburgCity_Gym_Text_WallyPokenav, MSGBOX_DEFAULT
+	waitfanfare
+	setflag FLAG_SYS_DEXNAV_GET
 	msgbox PetalburgCity_Gym_Text_WallyThankYouBye, MSGBOX_DEFAULT
 	closemessage
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterDown
@@ -1201,7 +1206,7 @@ PetalburgCity_Gym_Text_WouldYouReallyComeWithMe:
 PetalburgCity_Gym_Text_DadSoDidItWorkOut:
 	.string "DAD: So, did it work out?$"
 
-PetalburgCity_Gym_Text_WallyThankYouBye:
+PetalburgCity_Gym_Text_WallyThankYou:
 	.string "WALLY: Thank you, yes, it did.\n"
 	.string "Here's your POKéMON back.\p"
 	.string "{PLAYER}, thank you for coming along\n"
@@ -1210,6 +1215,15 @@ PetalburgCity_Gym_Text_WallyThankYouBye:
 	.string "my POKéMON.\p"
 	.string "I promise I'll take really good\n"
 	.string "care of it.\p"
+	.string "Here, take this as thanks! It's my\n"
+	.string "POKéNAV.$"
+
+PetalburgCity_Gym_Text_WallyPokenav:
+	.string "{PLAYER} received the POKéNAV!$"
+
+PetalburgCity_Gym_Text_WallyThankYouBye:
+	.string "Maybe it can help you catch new\n"
+	.string "POKémon just like you helped me!$"
 	.string "Oh! My mom's waiting for me,\n"
 	.string "so I have to go!\p"
 	.string "Bye, {PLAYER}!$"

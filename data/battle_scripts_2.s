@@ -66,6 +66,13 @@ BattleScript_SuccessBallThrow::
 	incrementgamestat GAME_STAT_POKEMON_CAPTURES
 BattleScript_PrintCaughtMonInfo::
 	printstring STRINGID_GOTCHAPKMNCAUGHTPLAYER
+	@
+	@ ROM hack edit: Give catch EXP
+	@
+	setbyte sGIVEEXP_STATE, 0
+	setbyte gBattleOutcome, B_OUTCOME_CAUGHT
+	getexp BS_TARGET
+	@
 	trysetcaughtmondexflags BattleScript_TryNicknameCaughtMon
 	printstring STRINGID_PKMNDATAADDEDTODEX
 	waitstate
