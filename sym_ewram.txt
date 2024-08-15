@@ -1,3 +1,4 @@
+	.include "gflib/malloc.o"
 	.include "src/decompress.o"
 	.include "src/main.o"
 	.include "gflib/window.o"
@@ -148,3 +149,4 @@
 	.include "src/faraway_island.o"
 	.include "src/trainer_hill.o"
 	.include "src/rayquaza_scene.o"
+	.include "src/dexnav.o"

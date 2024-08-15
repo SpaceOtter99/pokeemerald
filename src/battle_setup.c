@@ -108,7 +108,7 @@ EWRAM_DATA static u8 *sTrainerBBattleScriptRetAddr = NULL;
 EWRAM_DATA static bool8 sShouldCheckTrainerBScript = FALSE;
 EWRAM_DATA static u8 sNoOfPossibleTrainerRetScripts = 0;
 
-// The first transition is used if the enemy pokemon are lower level than our pokemon.
+// The first transition is used if the enemy Pokémon are lower level than our Pokémon.
 // Otherwise, the second transition is used.
 static const u8 sBattleTransitionTable_Wild[][2] =
 {
@@ -400,14 +400,14 @@ void BattleSetup_StartBattlePikeWildBattle(void)
 
 static void DoStandardWildBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     FreezeObjectEvents();
     StopPlayerAvatar();
     gMain.savedCallback = CB2_EndWildBattle;
     gBattleTypeFlags = 0;
     if (InBattlePyramid())
     {
-        VarSet(VAR_TEMP_E, 0);
+        VarSet(VAR_TEMP_PLAYING_PYRAMID_MUSIC, 0);
         gBattleTypeFlags |= BATTLE_TYPE_PYRAMID;
     }
     CreateBattleStartTask(GetWildBattleTransition(), 0);
@@ -419,7 +419,7 @@ static void DoStandardWildBattle(void)
 
 void BattleSetup_StartRoamerBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     FreezeObjectEvents();
     StopPlayerAvatar();
     gMain.savedCallback = CB2_EndWildBattle;
@@ -433,7 +433,7 @@ void BattleSetup_StartRoamerBattle(void)
 
 static void DoSafariBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     FreezeObjectEvents();
     StopPlayerAvatar();
     gMain.savedCallback = CB2_EndSafariBattle;
@@ -443,7 +443,7 @@ static void DoSafariBattle(void)
 
 static void DoBattlePikeWildBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     FreezeObjectEvents();
     StopPlayerAvatar();
     gMain.savedCallback = CB2_EndWildBattle;
@@ -479,7 +479,7 @@ static void DoBattlePyramidTrainerHillBattle(void)
 void StartWallyTutorialBattle(void)
 {
     CreateMaleMon(&gEnemyParty[0], SPECIES_RALTS, 5);
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gMain.savedCallback = CB2_ReturnToFieldContinueScriptPlayMapMusic;
     gBattleTypeFlags = BATTLE_TYPE_WALLY_TUTORIAL;
     CreateBattleStartTask(B_TRANSITION_SLICE, 0);
@@ -487,7 +487,7 @@ void StartWallyTutorialBattle(void)
 
 void BattleSetup_StartScriptedWildBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gMain.savedCallback = CB2_EndScriptedWildBattle;
     gBattleTypeFlags = 0;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
@@ -499,7 +499,7 @@ void BattleSetup_StartScriptedWildBattle(void)
 
 void BattleSetup_StartLatiBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gMain.savedCallback = CB2_EndScriptedWildBattle;
     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
@@ -511,7 +511,7 @@ void BattleSetup_StartLatiBattle(void)
 
 void BattleSetup_StartLegendaryBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gMain.savedCallback = CB2_EndScriptedWildBattle;
     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
 
@@ -550,7 +550,7 @@ void BattleSetup_StartLegendaryBattle(void)
 
 void StartGroudonKyogreBattle(void)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gMain.savedCallback = CB2_EndScriptedWildBattle;
     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY | BATTLE_TYPE_KYOGRE_GROUDON;
 
@@ -570,7 +570,7 @@ void StartRegiBattle(void)
     u8 transitionId;
     u16 species;
 
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gMain.savedCallback = CB2_EndScriptedWildBattle;
     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY | BATTLE_TYPE_REGI;
 
@@ -724,7 +724,7 @@ static u16 GetSumOfPlayerPartyLevel(u8 numMons)
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
-        u32 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES2);
+        u32 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES_OR_EGG);
 
         if (species != SPECIES_EGG && species != SPECIES_NONE && GetMonData(&gPlayerParty[i], MON_DATA_HP) != 0)
         {
@@ -845,7 +845,7 @@ static u8 GetTrainerBattleTransition(void)
         return B_TRANSITION_AQUA;
 
     if (gTrainers[gTrainerBattleOpponent_A].doubleBattle == TRUE)
-        minPartyCount = 2; // double battles always at least have 2 pokemon.
+        minPartyCount = 2; // double battles always at least have 2 Pokémon.
     else
         minPartyCount = 1;
 
@@ -1194,8 +1194,8 @@ void ConfigureAndSetUpOneTrainerBattle(u8 trainerObjEventId, const u8 *trainerSc
     gSelectedObjectEvent = trainerObjEventId;
     gSpecialVar_LastTalked = gObjectEvents[trainerObjEventId].localId;
     BattleSetup_ConfigureTrainerBattle(trainerScript + 1);
-    ScriptContext1_SetupScript(EventScript_StartTrainerApproach);
-    ScriptContext2_Enable();
+    ScriptContext_SetupScript(EventScript_StartTrainerApproach);
+    LockPlayerFieldControls();
 }
 
 void ConfigureTwoTrainersBattle(u8 trainerObjEventId, const u8 *trainerScript)
@@ -1207,8 +1207,8 @@ void ConfigureTwoTrainersBattle(u8 trainerObjEventId, const u8 *trainerScript)
 
 void SetUpTwoTrainersBattle(void)
 {
-    ScriptContext1_SetupScript(EventScript_StartTrainerApproach);
-    ScriptContext2_Enable();
+    ScriptContext_SetupScript(EventScript_StartTrainerApproach);
+    LockPlayerFieldControls();
 }
 
 bool32 GetTrainerFlagFromScriptPointer(const u8 *data)
@@ -1248,7 +1248,7 @@ static void SetBattledTrainersFlags(void)
     FlagSet(GetTrainerAFlag());
 }
 
-static void SetBattledTrainerFlag(void)
+static void UNUSED SetBattledTrainerFlag(void)
 {
     FlagSet(GetTrainerAFlag());
 }
@@ -1277,7 +1277,7 @@ void BattleSetup_StartTrainerBattle(void)
 
     if (InBattlePyramid())
     {
-        VarSet(VAR_TEMP_E, 0);
+        VarSet(VAR_TEMP_PLAYING_PYRAMID_MUSIC, 0);
         gBattleTypeFlags |= BATTLE_TYPE_PYRAMID;
 
         if (gNoOfApproachingTrainers == 2)
@@ -1320,7 +1320,7 @@ void BattleSetup_StartTrainerBattle(void)
     else
         DoTrainerBattle();
 
-    ScriptContext1_Stop();
+    ScriptContext_Stop();
 }
 
 static void CB2_EndTrainerBattle(void)
@@ -1371,7 +1371,7 @@ void BattleSetup_StartRematchBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_TRAINER;
     gMain.savedCallback = CB2_EndRematchBattle;
     DoTrainerBattle();
-    ScriptContext1_Stop();
+    ScriptContext_Stop();
 }
 
 void ShowTrainerIntroSpeech(void)

@@ -141,6 +141,9 @@ static u8 Fishing_EndNoMon(struct Task *);
 static void AlignFishingAnimationFrames(void);
 
 static u8 TrySpinPlayerForWarp(struct ObjectEvent *, s16 *);
+static void PlayerGoSlow(u8 direction);
+
+// .rodata
 
 static bool8 (*const sForcedMovementTestFuncs[NUM_FORCED_MOVEMENTS])(u8) =
 {
@@ -626,11 +629,20 @@ static void PlayerNotOnBikeMoving(u8 direction, u16 heldKeys)
             return;
         }
     }
-
+    
+    gPlayerAvatar.creeping = FALSE;
     if (gPlayerAvatar.flags & PLAYER_AVATAR_FLAG_SURFING)
     {
-        // same speed as running
-        PlayerWalkFast(direction);
+        if (FlagGet(FLAG_SYS_DEXNAV_SEARCH) && (heldKeys & A_BUTTON))
+        {
+            gPlayerAvatar.creeping = TRUE;
+            PlayerGoSlow(direction);
+        }
+        else
+        {
+            // speed 2 is fast, same speed as running
+            PlayerWalkFast(direction);
+        }
         return;
     }
 
@@ -640,6 +652,11 @@ static void PlayerNotOnBikeMoving(u8 direction, u16 heldKeys)
         PlayerRun(direction);
         gPlayerAvatar.flags |= PLAYER_AVATAR_FLAG_DASH;
         return;
+    }
+    else if (FlagGet(FLAG_SYS_DEXNAV_SEARCH) && (heldKeys & A_BUTTON))
+    {
+        gPlayerAvatar.creeping = TRUE;
+        PlayerGoSlow(direction);
     }
     else
     {
@@ -949,6 +966,12 @@ void PlayerSetAnimId(u8 movementActionId, u8 copyableMovement)
         PlayerSetCopyableMovement(copyableMovement);
         ObjectEventSetHeldMovement(&gObjectEvents[gPlayerAvatar.objectEventId], movementActionId);
     }
+}
+
+// slow
+static void PlayerGoSlow(u8 direction)
+{
+    PlayerSetAnimId(GetWalkSlowMovementAction(direction), 2);
 }
 
 void PlayerWalkNormal(u8 direction)
@@ -1468,7 +1491,7 @@ static void Task_PushBoulder(u8 taskId)
 
 static bool8 PushBoulder_Start(struct Task *task, struct ObjectEvent *player, struct ObjectEvent *boulder)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gPlayerAvatar.preventStep = TRUE;
     task->tState++;
     return FALSE;
@@ -1508,7 +1531,7 @@ static bool8 PushBoulder_End(struct Task *task, struct ObjectEvent *player, stru
         ObjectEventClearHeldMovementIfFinished(player);
         ObjectEventClearHeldMovementIfFinished(boulder);
         gPlayerAvatar.preventStep = FALSE;
-        ScriptContext2_Disable();
+        UnlockPlayerFieldControls();
         DestroyTask(FindTaskIdByFunc(Task_PushBoulder));
     }
     return FALSE;
@@ -1570,7 +1593,7 @@ static bool8 PlayerAvatar_SecretBaseMatSpinStep0(struct Task *task, struct Objec
     task->data[0]++;
     task->data[1] = objectEvent->movementDirection;
     gPlayerAvatar.preventStep = TRUE;
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     PlaySE(SE_WARP_IN);
     return TRUE;
 }
@@ -1616,7 +1639,7 @@ static bool8 PlayerAvatar_SecretBaseMatSpinStep3(struct Task *task, struct Objec
     if (ObjectEventClearHeldMovementIfFinished(objectEvent))
     {
         ObjectEventSetHeldMovement(objectEvent, GetWalkSlowMovementAction(GetOppositeDirection(task->data[1])));
-        ScriptContext2_Disable();
+        UnlockPlayerFieldControls();
         gPlayerAvatar.preventStep = FALSE;
         DestroyTask(FindTaskIdByFunc(PlayerAvatar_DoSecretBaseMatSpin));
     }
@@ -1627,7 +1650,7 @@ static void CreateStopSurfingTask(u8 direction)
 {
     u8 taskId;
 
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     Overworld_ClearSavedMusic();
     Overworld_ChangeMusicToDefault();
     gPlayerAvatar.flags &= ~PLAYER_AVATAR_FLAG_SURFING;
@@ -1661,8 +1684,12 @@ static void Task_WaitStopSurfing(u8 taskId)
         ObjectEventSetGraphicsId(playerObjEvent, GetPlayerAvatarGraphicsIdByStateId(PLAYER_AVATAR_STATE_NORMAL));
         ObjectEventSetHeldMovement(playerObjEvent, GetFaceDirectionMovementAction(playerObjEvent->facingDirection));
         gPlayerAvatar.preventStep = FALSE;
-        ScriptContext2_Disable();
+        UnlockPlayerFieldControls();
         DestroySprite(&gSprites[playerObjEvent->fieldEffectSpriteId]);
+#ifdef BUGFIX
+        // If this is not defined but the player steps into grass from surfing, they will appear over the grass instead of in the grass.
+        playerObjEvent->triggerGroundEffectsOnMove = TRUE;
+#endif
         DestroyTask(taskId);
     }
 }
@@ -1720,7 +1747,7 @@ static void Task_Fishing(u8 taskId)
 
 static bool8 Fishing_Init(struct Task *task)
 {
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     gPlayerAvatar.preventStep = TRUE;
     task->tStep++;
     return FALSE;
@@ -1945,7 +1972,7 @@ static bool8 Fishing_StartEncounter(struct Task *task)
     if (task->tFrameCounter != 0)
     {
         gPlayerAvatar.preventStep = FALSE;
-        ScriptContext2_Disable();
+        UnlockPlayerFieldControls();
         FishingWildEncounter(task->tFishingRod);
         RecordFishingAttemptForTV(TRUE);
         DestroyTask(FindTaskIdByFunc(Task_Fishing));
@@ -2004,7 +2031,7 @@ static bool8 Fishing_EndNoMon(struct Task *task)
     if (!IsTextPrinterActive(0))
     {
         gPlayerAvatar.preventStep = FALSE;
-        ScriptContext2_Disable();
+        UnlockPlayerFieldControls();
         UnfreezeObjectEvents();
         ClearDialogWindowAndFrame(0, TRUE);
         RecordFishingAttemptForTV(FALSE);
@@ -2093,7 +2120,7 @@ static void Task_DoPlayerSpinExit(u8 taskId)
             tSpeed = 1;
             tCurY = (u16)(sprite->y + sprite->y2) << 4;
             sprite->y2 = 0;
-            CameraObjectReset2();
+            CameraObjectFreeze();
             object->fixedPriority = TRUE;
             sprite->oam.priority = 0;
             sprite->subpriority = 0;
@@ -2162,7 +2189,7 @@ static void Task_DoPlayerSpinEntrance(u8 taskId)
             tSubpriority = sprite->subpriority;
             tCurY = -((u16)sprite->y2 + 32) * 16;
             sprite->y2 = 0;
-            CameraObjectReset2();
+            CameraObjectFreeze();
             object->fixedPriority = TRUE;
             sprite->oam.priority = 1;
             sprite->subpriority = 0;
@@ -2197,7 +2224,7 @@ static void Task_DoPlayerSpinEntrance(u8 taskId)
                 object->fixedPriority = 0;
                 sprite->oam.priority = tPriority;
                 sprite->subpriority = tSubpriority;
-                CameraObjectReset1();
+                CameraObjectReset();
                 DestroyTask(taskId);
             }
             break;

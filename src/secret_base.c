@@ -47,6 +47,8 @@
 #include "constants/songs.h"
 #include "constants/trainers.h"
 
+#define TAG_SCROLL_ARROW 5112
+
 // Values for registryStatus
 enum {
     UNREGISTERED,
@@ -214,7 +216,7 @@ static const struct ListMenuTemplate sRegistryListMenuTemplate =
     .itemVerticalPadding = 0,
     .scrollMultiple = LIST_NO_MULTIPLE_SCROLL,
     .fontId = FONT_NORMAL,
-    .cursorKind = 0,
+    .cursorKind = CURSOR_BLACK_ARROW,
 };
 
 static void ClearSecretBase(struct SecretBase *secretBase)
@@ -461,7 +463,7 @@ static void EnterNewlyCreatedSecretBase_WaitFadeIn(u8 taskId)
     ObjectEventTurn(&gObjectEvents[gPlayerAvatar.objectEventId], DIR_NORTH);
     if (IsWeatherNotFadingIn() == TRUE)
     {
-        EnableBothScriptContexts();
+        ScriptContext_Enable();
         DestroyTask(taskId);
     }
 }
@@ -470,7 +472,7 @@ static void EnterNewlyCreatedSecretBase_StartFadeIn(void)
 {
     s16 x, y;
 
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     HideMapNamePopUpWindow();
     FindMetatileIdMapCoords(&x, &y, METATILE_SecretBase_PC);
     x += MAP_OFFSET;
@@ -673,7 +675,7 @@ void WarpIntoSecretBase(const struct MapPosition *position, const struct MapEven
 {
     SetCurSecretBaseIdFromPosition(position, events);
     TrySetCurSecretBaseIndex();
-    ScriptContext1_SetupScript(SecretBase_EventScript_Enter);
+    ScriptContext_SetupScript(SecretBase_EventScript_Enter);
 }
 
 bool8 TrySetCurSecretBase(void)
@@ -691,7 +693,7 @@ static void Task_WarpOutOfSecretBase(u8 taskId)
     switch (gTasks[taskId].data[0])
     {
     case 0:
-        ScriptContext2_Enable();
+        LockPlayerFieldControls();
         gTasks[taskId].data[0] = 1;
         break;
     case 1:
@@ -703,7 +705,7 @@ static void Task_WarpOutOfSecretBase(u8 taskId)
         WarpIntoMap();
         gFieldCallback = FieldCB_DefaultWarpExit;
         SetMainCallback2(CB2_LoadMap);
-        ScriptContext2_Disable();
+        UnlockPlayerFieldControls();
         DestroyTask(taskId);
         break;
     }
@@ -914,14 +916,14 @@ void ShowSecretBaseRegistryMenu(void)
 static void Task_ShowSecretBaseRegistryMenu(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
-    ScriptContext2_Enable();
+    LockPlayerFieldControls();
     tNumBases = GetNumRegisteredSecretBases();
     if (tNumBases != 0)
     {
         tSelectedRow = 0;
         tScrollOffset = 0;
         ClearDialogWindowAndFrame(0, FALSE);
-        sRegistryMenu = calloc(1, sizeof(*sRegistryMenu));
+        sRegistryMenu = AllocZeroed(sizeof(*sRegistryMenu));
         tMainWindowId = AddWindow(&sRegistryWindowTemplates[0]);
         BuildRegistryMenuItems(taskId);
         FinalizeRegistryMenu(taskId);
@@ -953,7 +955,7 @@ static void BuildRegistryMenuItems(u8 taskId)
     }
 
     sRegistryMenu->items[count].name = gText_Cancel;
-    sRegistryMenu->items[count].id = -2;
+    sRegistryMenu->items[count].id = LIST_CANCEL;
     tNumBases = count + 1;
     if (tNumBases < 8)
         tMaxShownItems = tNumBases;
@@ -985,7 +987,7 @@ static void FinalizeRegistryMenu(u8 taskId)
 static void AddRegistryMenuScrollArrows(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
-    tArrowTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 188, 12, 148, tNumBases - tMaxShownItems, 0x13f8, 0x13f8, &tScrollOffset);
+    tArrowTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 188, 12, 148, tNumBases - tMaxShownItems, TAG_SCROLL_ARROW, TAG_SCROLL_ARROW, &tScrollOffset);
 }
 
 static void HandleRegistryMenuInput(u8 taskId)
@@ -1006,7 +1008,7 @@ static void HandleRegistryMenuInput(u8 taskId)
         ClearWindowTilemap(tMainWindowId);
         RemoveWindow(tMainWindowId);
         ScheduleBgCopyTilemapToVram(0);
-        free(sRegistryMenu);
+        Free(sRegistryMenu);
         GoToSecretBasePCRegisterMenu(taskId);
         break;
     default:
@@ -1110,9 +1112,9 @@ static void ReturnToMainRegistryMenu(u8 taskId)
 static void GoToSecretBasePCRegisterMenu(u8 taskId)
 {
     if (VarGet(VAR_CURRENT_SECRET_BASE) == 0)
-        ScriptContext1_SetupScript(SecretBase_EventScript_PCCancel);
+        ScriptContext_SetupScript(SecretBase_EventScript_PCCancel);
     else
-        ScriptContext1_SetupScript(SecretBase_EventScript_ShowRegisterMenu);
+        ScriptContext_SetupScript(SecretBase_EventScript_ShowRegisterMenu);
 
     DestroyTask(taskId);
 }
