@@ -338,7 +338,6 @@ const u8 gMoveNames[MOVES_COUNT][MOVE_NAME_LENGTH + 1] =
     [MOVE_BLOCK] = _("BLOCK"),
     [MOVE_HOWL] = _("HOWL"),
     [MOVE_DRAGON_CLAW] = _("DRAGON CLAW"),
-    [MOVE_COSMIC_CLAW] = _("COSMIC CLAW"),
     [MOVE_FRENZY_PLANT] = _("FRENZY PLANT"),
     [MOVE_BULK_UP] = _("BULK UP"),
     [MOVE_BOUNCE] = _("BOUNCE"),

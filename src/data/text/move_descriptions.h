@@ -1757,7 +1757,6 @@ const u8 *const gMoveDescriptionPointers[MOVES_COUNT - 1] =
     [MOVE_BLOCK - 1] = sBlockDescription,
     [MOVE_HOWL - 1] = sHowlDescription,
     [MOVE_DRAGON_CLAW - 1] = sDragonClawDescription,
-    [MOVE_COSMIC_CLAW - 1] = sDragonClawDescription,
     [MOVE_FRENZY_PLANT - 1] = sFrenzyPlantDescription,
     [MOVE_BULK_UP - 1] = sBulkUpDescription,
     [MOVE_BOUNCE - 1] = sBounceDescription,
