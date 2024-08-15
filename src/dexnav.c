@@ -1288,10 +1288,12 @@ static u8 DexNavTryGenerateMonLevel(u16 species, u8 environment)
 {
     u8 levelBase = GetEncounterLevelFromMapData(species, environment);
     u8 levelBonus = 0;
-    for (u8 i = 0; i < gSaveBlock1Ptr->dexNavChain)
+    u8 lvlDiff = 0;
+    u32 i = 0;
+    for (i = 0; i < gSaveBlock1Ptr->dexNavChain; i++)
         if (Random() % 5 == 0)
         levelBonus ++;
-    u8 lvlDiff = GetAveragePartyLevel() - levelBase - levelBonus;
+    lvlDiff = GetAveragePartyLevel() - levelBase - levelBonus;
 
     if (levelBase == MON_LEVEL_NONEXISTENT)
         return MON_LEVEL_NONEXISTENT;   //species not found in the area           
@@ -1299,14 +1301,14 @@ static u8 DexNavTryGenerateMonLevel(u16 species, u8 environment)
     if (Random() % 100 < 4) //4% chance of boosted level
     {
         u8 iterations = (lvlDiff > 10) ? lvlDiff : 10;
-        for (u8 i = 0; i < iterations; i++)
+        for (i = 0; i < iterations; i++)
         {
-            u8 singleBonus = (Random() % 2) + (Random() % 2) + (Random() % 2) - 4
-            levelBonus += (singleBonus < 0) ? 0 : singleBonus // Add either 0, 1, 1, or 2 levels, mean 10 or lvl diff, SD approx 2.5
+            int8_t singleBonus = (Random() % 2) + (Random() % 2) + (Random() % 2) - 4;
+            levelBonus += (singleBonus < 0) ? 0 : singleBonus; // Add either 0, 1, 1, or 2 levels, mean 10 or lvl diff, SD approx 2.5
         }
 
         if (levelBonus > lvlDiff)
-            levelBonus -= (Random() % (levelBonus - lvlDiff))  // Reduce overlevel by around half the overlevel
+            levelBonus -= (Random() % (levelBonus - lvlDiff));  // Reduce overlevel by around half the overlevel
     }
 
     if (levelBase + levelBonus > MAX_LEVEL)
