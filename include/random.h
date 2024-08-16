@@ -201,6 +201,7 @@ enum RandomTag
     RNG_AI_ABILITY,
     RNG_AI_HASBADODDS,
     RNG_SHELL_SIDE_ARM,
+    RNG_DEXNAV_ENCOUNTER_LEVEL,
 };
 
 #define RandomWeighted(tag, ...) \
