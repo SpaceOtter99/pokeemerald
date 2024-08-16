@@ -1262,18 +1262,54 @@ static void CreateDexNavWildMon(u16 species, u8 potential, u8 level, u8 abilityN
     FlagClear(FLAG_SHINY_CREATION);
 }
 
+static u8 GetAveragePartyLevel()
+{
+    u8 fixedLVL = 0;
+	
+	if (GetMonData(&gPlayerParty[5], MON_DATA_SPECIES) != SPECIES_NONE)
+		fixedLVL = (GetMonData(&gPlayerParty[0], MON_DATA_LEVEL) + GetMonData(&gPlayerParty[1], MON_DATA_LEVEL) + GetMonData(&gPlayerParty[2], MON_DATA_LEVEL) + GetMonData(&gPlayerParty[3], MON_DATA_LEVEL) + GetMonData(&gPlayerParty[4], MON_DATA_LEVEL) + GetMonData(&gPlayerParty[5], MON_DATA_LEVEL)) / 6;
+	else if ((GetMonData(&gPlayerParty[5], MON_DATA_SPECIES) == SPECIES_NONE) && (GetMonData(&gPlayerParty[4], MON_DATA_SPECIES) != SPECIES_NONE))
+			fixedLVL = (GetMonData(&gPlayerParty[0], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[1], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[2], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[3], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[4], MON_DATA_LEVEL)) / 5;
+		else if ((GetMonData(&gPlayerParty[4], MON_DATA_SPECIES) == SPECIES_NONE) && (GetMonData(&gPlayerParty[3], MON_DATA_SPECIES) != SPECIES_NONE))
+			fixedLVL = (GetMonData(&gPlayerParty[0], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[1], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[2], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[3], MON_DATA_LEVEL)) / 4;
+			else if ((GetMonData(&gPlayerParty[3], MON_DATA_SPECIES) == SPECIES_NONE) && (GetMonData(&gPlayerParty[2], MON_DATA_SPECIES) != SPECIES_NONE))
+				fixedLVL = (GetMonData(&gPlayerParty[0], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[1], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[2], MON_DATA_LEVEL)) / 3;
+				else if ((GetMonData(&gPlayerParty[2], MON_DATA_SPECIES) == SPECIES_NONE) && (GetMonData(&gPlayerParty[1], MON_DATA_SPECIES) != SPECIES_NONE))
+					fixedLVL = (GetMonData(&gPlayerParty[0], MON_DATA_LEVEL)+GetMonData(&gPlayerParty[1], MON_DATA_LEVEL)) / 2;
+					else if ((GetMonData(&gPlayerParty[1], MON_DATA_SPECIES) == SPECIES_NONE) && (GetMonData(&gPlayerParty[0], MON_DATA_SPECIES) != SPECIES_NONE))
+						fixedLVL = GetMonData(&gPlayerParty[0], MON_DATA_LEVEL);
+	
+    return fixedLVL;
+}
+
 // gets a random level of the species based on map data.
-//if it was a hidden encounter, updates the environment it is to be found from the wildheader encounterRate
+// if it was a hidden encounter, updates the environment it is to be found from the wildheader encounterRate
 static u8 DexNavTryGenerateMonLevel(u16 species, u8 environment)
 {
     u8 levelBase = GetEncounterLevelFromMapData(species, environment);
-    u8 levelBonus = gSaveBlock1Ptr->dexNavChain / 5;
+    u8 levelBonus = 0;
+    u8 lvlDiff = 0;
+    u32 i = 0;
+    for (i = 0; i < gSaveBlock1Ptr->dexNavChain; i++)
+        if (Random() % 5 == 0)
+        levelBonus ++;
+    lvlDiff = GetAveragePartyLevel() - levelBase - levelBonus;
 
     if (levelBase == MON_LEVEL_NONEXISTENT)
-        return MON_LEVEL_NONEXISTENT;   //species not found in the area
+        return MON_LEVEL_NONEXISTENT;   //species not found in the area           
     
-    if (Random() % 100 < 4)
-        levelBonus += 10; //4% chance of having a +10 level
+    if (Random() % 100 < 4) //4% chance of boosted level
+    {
+        u8 iterations = (lvlDiff > 10) ? lvlDiff : 10;
+        for (i = 0; i < iterations; i++)
+        {
+            int8_t singleBonus = (Random() % 2) + (Random() % 2) + (Random() % 2) - 4;
+            levelBonus += (singleBonus < 0) ? 0 : singleBonus; // Add either 0, 1, 1, or 2 levels, mean 10 or lvl diff, SD approx 2.5
+        }
+
+        if (levelBonus > lvlDiff)
+            levelBonus -= (Random() % (levelBonus - lvlDiff));  // Reduce overlevel by around half the overlevel
+    }
 
     if (levelBase + levelBonus > MAX_LEVEL)
         return MAX_LEVEL;
