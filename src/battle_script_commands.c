@@ -4409,7 +4409,9 @@ static void Cmd_getexp(void)
                     }
                     else
                     {
-                        if ((B_EXP_CATCH >= GEN_6) && gBattleOutcome == B_OUTCOME_CAUGHT && !GetSetPokedexFlag(SpeciesToNationalPokedexNum(gBattleMons[gBattlerTarget].species), FLAG_GET_CAUGHT))
+                        if ((B_EXP_CATCH >= GEN_6) 
+                            && gBattleOutcome == B_OUTCOME_CAUGHT 
+                            && !GetSetPokedexFlag(SpeciesToNationalPokedexNum(gBattleMons[gBattlerTarget].species), FLAG_GET_CAUGHT))
                         {
                             gBattleMoveDamage = B_NEW_MON_CAUGHT_EXPMUL(gBattleMoveDamage);
                             i = STRINGID_ABOOSTED;
