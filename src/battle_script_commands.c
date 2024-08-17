@@ -4409,7 +4409,13 @@ static void Cmd_getexp(void)
                     }
                     else
                     {
-                        i = STRINGID_EMPTYSTRING4;
+                        if (gBattleOutcome == B_OUTCOME_CAUGHT && !GetSetPokedexFlag(SpeciesToNationalPokedexNum(gBattleMons[gBattlerTarget].species), FLAG_GET_CAUGHT))
+                        {
+                            gBattleMoveDamage *= 3;
+                            i = STRINGID_ABOOSTED;
+                        }
+                        else
+                            i = STRINGID_EMPTYSTRING4;
                     }
 
                     // get exp getter battler
