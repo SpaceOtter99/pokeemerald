@@ -699,39 +699,6 @@ const struct Item gItemsInfo[] =
         .iconPalette = gItemIconPalette_FullRestore,
     },
 
-    [ITEM_REVIVE] =
-    {
-        .name = _("Revive"),
-        .price = (I_PRICE >= GEN_7) ? 2000 : 1500,
-        .description = COMPOUND_STRING(
-            "Revives a fainted\n"
-            "Pokémon with half\n"
-            "its HP."),
-        .pocket = POCKET_ITEMS,
-        .type = ITEM_USE_PARTY_MENU,
-        .fieldUseFunc = ItemUseOutOfBattle_Medicine,
-        .battleUsage = EFFECT_ITEM_REVIVE,
-        .effect = gItemEffect_Revive,
-        .flingPower = 30,
-        .iconPic = gItemIcon_Revive,
-        .iconPalette = gItemIconPalette_Revive,
-    },
-
-    [ITEM_MAX_REVIVE] =
-    {
-        .name = _("Max Revive"),
-        .price = 4000,
-        .description = sMaxReviveDesc,
-        .pocket = POCKET_ITEMS,
-        .type = ITEM_USE_PARTY_MENU,
-        .fieldUseFunc = ItemUseOutOfBattle_Medicine,
-        .battleUsage = EFFECT_ITEM_REVIVE,
-        .effect = gItemEffect_MaxRevive,
-        .flingPower = 30,
-        .iconPic = gItemIcon_MaxRevive,
-        .iconPalette = gItemIconPalette_Revive,
-    },
-
     [ITEM_FRESH_WATER] =
     {
         .name = _("Fresh Water"),
@@ -1079,6 +1046,39 @@ const struct Item gItemsInfo[] =
         .flingPower = 30,
         .iconPic = gItemIcon_Ether,
         .iconPalette = gItemIconPalette_MaxElixir,
+    },
+
+    [ITEM_REVIVE] =
+    {
+        .name = _("Revive"),
+        .price = (I_PRICE >= GEN_7) ? 2000 : 1500,
+        .description = COMPOUND_STRING(
+            "Revives a fainted\n"
+            "Pokémon with half\n"
+            "its HP."),
+        .pocket = POCKET_ITEMS,
+        .type = ITEM_USE_PARTY_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_Medicine,
+        .battleUsage = EFFECT_ITEM_REVIVE,
+        .effect = gItemEffect_Revive,
+        .flingPower = 30,
+        .iconPic = gItemIcon_Revive,
+        .iconPalette = gItemIconPalette_Revive,
+    },
+
+    [ITEM_MAX_REVIVE] =
+    {
+        .name = _("Max Revive"),
+        .price = 4000,
+        .description = sMaxReviveDesc,
+        .pocket = POCKET_ITEMS,
+        .type = ITEM_USE_PARTY_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_Medicine,
+        .battleUsage = EFFECT_ITEM_REVIVE,
+        .effect = gItemEffect_MaxRevive,
+        .flingPower = 30,
+        .iconPic = gItemIcon_MaxRevive,
+        .iconPalette = gItemIconPalette_Revive,
     },
 
     [ITEM_BERRY_JUICE] =
