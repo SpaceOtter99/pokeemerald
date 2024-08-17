@@ -14,6 +14,7 @@ LittlerootTown_MaysHouse_1F_OnLoad:
 	end
 
 LittlerootTown_MaysHouse_1F_EventScript_SetMovingBoxes::
+	setflag FLAG_RECEIVED_RUNNING_SHOES
 	setmetatile 5, 4, METATILE_BrendansMaysHouse_MovingBox_Open, TRUE
 	setmetatile 5, 2, METATILE_BrendansMaysHouse_MovingBox_Closed, TRUE
 	return
