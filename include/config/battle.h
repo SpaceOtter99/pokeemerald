@@ -2,6 +2,7 @@
 #define GUARD_CONFIG_BATTLE_H
 
 // Custom Flags
+#define B_NEW_MON_CAUGHT_EXPMUL(xp) xp * 3     // Multiplier to EXP when catching a pokemon for the first time. Requires B_EXP_CATCH
 #define B_CHANGE_DRAGON_FAIRY_VS    TRUE       // Makes it so that dragon and fairy are each not very effective against each other
 
 // Calculation settings
