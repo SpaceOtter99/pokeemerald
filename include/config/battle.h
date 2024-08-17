@@ -1,6 +1,9 @@
 #ifndef GUARD_CONFIG_BATTLE_H
 #define GUARD_CONFIG_BATTLE_H
 
+// Custom Flags
+#define B_CHANGE_DRAGON_FAIRY_VS    TRUE       // Makes it so that dragon and fairy are each not very effective against each other
+
 // Calculation settings
 #define B_CRIT_CHANCE               GEN_LATEST // Chances of a critical hit landing. See CalcCritChanceStage. Gen6+ chances guarantee that Farfetch'd and Sirfetch'd always get critical hits while holding a Leek and using high-crit ratio moves.
 #define B_CRIT_MULTIPLIER           GEN_3 // In Gen6+, critical hits multiply damage by 1.5 instead of 2.
