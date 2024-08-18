@@ -921,7 +921,7 @@ static void Task_EvolutionScene(u8 taskId)
             break;
         case MVSTATE_HANDLE_YES_NO:
             // This Yes/No is used for both the initial "delete move?" prompt
-            // and for the "stop learning move?" prompt
+            // and for the "Continue learning move?" prompt
             // What Yes/No do next is determined by tLearnMoveYesState / tLearnMoveNoState
             if (JOY_NEW(DPAD_UP) && sEvoCursorPos != 0)
             {
@@ -1031,8 +1031,8 @@ static void Task_EvolutionScene(u8 taskId)
         case MVSTATE_ASK_CANCEL:
             BattleStringExpandPlaceholdersToDisplayedString(gBattleStringsTable[STRINGID_STOPLEARNINGMOVE - BATTLESTRINGS_TABLE_START]);
             BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MSG);
-            gTasks[taskId].tLearnMoveYesState = MVSTATE_CANCEL;
-            gTasks[taskId].tLearnMoveNoState = MVSTATE_INTRO_MSG_1;
+            gTasks[taskId].tLearnMoveYesState = MVSTATE_INTRO_MSG_1;
+            gTasks[taskId].tLearnMoveNoState = MVSTATE_CANCEL;
             gTasks[taskId].tLearnMoveState = MVSTATE_PRINT_YES_NO;
             break;
         case MVSTATE_CANCEL:

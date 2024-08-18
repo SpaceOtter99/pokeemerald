@@ -558,12 +558,12 @@ static void DoMoveRelearnerMain(void)
         {
             s8 selection = Menu_ProcessInputNoWrapClearOnChoose();
 
-            if (selection == 0)
+            if (selection == MENU_B_PRESSED || selection == 0)
             {
                 gSpecialVar_0x8004 = FALSE;
                 sMoveRelearnerStruct->state = MENU_STATE_FADE_AND_RETURN;
             }
-            else if (selection == MENU_B_PRESSED || selection == 1)
+            else if (selection == 1)
             {
                 if (sMoveRelearnerMenuSate.showContestInfo == FALSE)
                 {
