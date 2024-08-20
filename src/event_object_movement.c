@@ -243,7 +243,7 @@ static void (*const sCameraObjectFuncs[])(struct Sprite *) = {
     [CAMERA_STATE_FROZEN] = CameraObject_UpdateFrozen,
 };
 
-#include "data/object_events/object_event_graphics.h"
+#include "data/object_events/object_event_graphics.h";
 
 // movement type callbacks
 static void (*const sMovementTypeCallbacks[])(struct Sprite *) =
