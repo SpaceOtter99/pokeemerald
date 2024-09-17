@@ -1,4 +1,3 @@
-#define GUARD_CONFIG_TEST_H
 #ifndef GUARD_CONFIG_TEST_H
 #define GUARD_CONFIG_TEST_H
 

@@ -4,7 +4,6 @@
 #include "decompress.h"
 #include "decoration.h"
 #include "decoration_inventory.h"
-#include "event_data.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
 #include "field_screen_effect.h"
@@ -156,179 +155,6 @@ static void Task_HandleShopMenuBuy(u8 taskId);
 static void Task_HandleShopMenuSell(u8 taskId);
 static void BuyMenuPrintItemDescriptionAndShowItemIcon(s32 item, bool8 onInit, struct ListMenu *list);
 static void BuyMenuPrintPriceInList(u8 windowId, u32 itemId, u8 y);
-
-static const u16 sShopInventory_ZeroBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_REPEL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_OneBadge[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_REPEL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_TwoBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_ThreeBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_REVIVE,
-    ITEM_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_FourBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_HYPER_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_REVIVE,
-    ITEM_REPEL,
-    ITEM_SUPER_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_FiveBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_ULTRA_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_HYPER_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_REVIVE,
-    ITEM_REPEL,
-    ITEM_SUPER_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_SixBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_ULTRA_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_HYPER_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_FULL_HEAL,
-    ITEM_REVIVE,
-    ITEM_REPEL,
-    ITEM_SUPER_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_SevenBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_ULTRA_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_HYPER_POTION,
-    ITEM_MAX_POTION,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_FULL_HEAL,
-    ITEM_REVIVE,
-    ITEM_REPEL,
-    ITEM_SUPER_REPEL,
-    ITEM_MAX_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 sShopInventory_EightBadges[] = {
-    ITEM_POKE_BALL,
-    ITEM_GREAT_BALL,
-    ITEM_ULTRA_BALL,
-    ITEM_POTION,
-    ITEM_SUPER_POTION,
-    ITEM_HYPER_POTION,
-    ITEM_MAX_POTION,
-    ITEM_FULL_RESTORE,
-    ITEM_ANTIDOTE,
-    ITEM_BURN_HEAL,
-    ITEM_ICE_HEAL,
-    ITEM_AWAKENING,
-    ITEM_PARALYZE_HEAL,
-    ITEM_FULL_HEAL,
-    ITEM_REVIVE,
-    ITEM_MAX_REVIVE,
-    ITEM_REPEL,
-    ITEM_SUPER_REPEL,
-    ITEM_MAX_REPEL,
-    ITEM_POKE_DOLL,
-    ITEM_NONE
-};
-
-static const u16 *const sShopInventories[] = 
-{
-    sShopInventory_ZeroBadges, 
-    sShopInventory_OneBadge,
-    sShopInventory_TwoBadges,
-    sShopInventory_ThreeBadges,
-    sShopInventory_FourBadges,
-    sShopInventory_FiveBadges,
-    sShopInventory_SixBadges,
-    sShopInventory_SevenBadges,
-    sShopInventory_EightBadges
-};
-
-static u16 itemList[64] = {ITEM_NONE};
 
 static const struct YesNoFuncTable sShopPurchaseYesNoFuncs =
 {
@@ -550,75 +376,11 @@ static void SetShopMenuCallback(void (* callback)(void))
     sMartInfo.callback = callback;
 }
 
-static u8 GetNumberOfBadges(void)
-{
-    u16 badgeFlag;
-    u8 count = 0;
-    
-    for (badgeFlag = FLAG_BADGE01_GET; badgeFlag < FLAG_BADGE01_GET + NUM_BADGES; badgeFlag++)
-    {
-        if (FlagGet(badgeFlag))
-            count++;
-    }
-    
-    return count;
-}
-
 static void SetShopItemsForSale(const u16 *items)
 {
     u16 i = 0;
 
-    u8 badgeCount = GetNumberOfBadges();
-
-    if (items[0] == ITEM_POKE_BALL || items[0] == ITEM_GREAT_BALL || items[0] == ITEM_ULTRA_BALL)
-    {
-        u16 c = 0;
-        u16 l1 = 0;
-        u16 l2 = 0;
-        itemList[c] = items[l1] && sShopInventories[badgeCount][l2]     ? 
-                        min(items[l1], sShopInventories[badgeCount][l2]):
-                        max(items[l1], sShopInventories[badgeCount][l2]);
-        while (c < 63)
-        {
-            l1 = 0;
-            l2 = 0;
-            i = 0;
-            do 
-            {
-                if (items[l1] <= itemList[c])
-                    l1 = i;
-                if (items[i] < items[l1]
-                 && items[i] > itemList[c])
-                    l1 = i;
-            } while (items[i++]);
-            i = 0;
-            do
-            {             
-                if (sShopInventories[badgeCount][l2] <= itemList[c])
-                    l2 = i;
-                if (sShopInventories[badgeCount][i] < sShopInventories[badgeCount][l2]
-                 && sShopInventories[badgeCount][i] > itemList[c])
-                    l2 = i;
-            } while (sShopInventories[badgeCount][i++]);
-            itemList[++c] = items[l1] && sShopInventories[badgeCount][l2]   ? 
-                            min(items[l1], sShopInventories[badgeCount][l2]):
-                            max(items[l1], sShopInventories[badgeCount][l2]);
-            if (itemList[c] <= itemList[c - 1])
-            {
-                itemList[c] = ITEM_NONE;
-                break;
-            }
-        }
-
-        i = 0;
-
-        sMartInfo.itemList = itemList;
-    }
-    else
-        sMartInfo.itemList = items;
-
-    i = 0;
-
+    sMartInfo.itemList = items;
     sMartInfo.itemCount = 0;
 
     // Read items until ITEM_NONE / DECOR_NONE is reached
@@ -1046,7 +808,7 @@ static void BuyMenuDrawMapBg(void)
         {
             metatile = MapGridGetMetatileIdAt(x + i, y + j);
             if (BuyMenuCheckForOverlapWithMenuBg(i, j) == TRUE)
-                metatileLayerType = MapGridGetMetatileLayerTypeAt(x + i, y + j);
+                metatileLayerType = METATILE_LAYER_TYPE_NORMAL;
             else
                 metatileLayerType = METATILE_LAYER_TYPE_COVERED;
 
@@ -1058,26 +820,46 @@ static void BuyMenuDrawMapBg(void)
     }
 }
 
+static bool8 IsMetatileLayerEmpty(const u16 *src)
+{
+    u32 i = 0;
+    for (i = 0; i < 4; ++i)
+    {
+        if ((src[i] & 0x3FF) != 0)
+            return FALSE;
+    }
+    return TRUE;
+}
+
 static void BuyMenuDrawMapMetatile(s16 x, s16 y, const u16 *src, u8 metatileLayerType)
 {
     u16 offset1 = x * 2;
     u16 offset2 = y * 64;
 
-    switch (metatileLayerType)
+    if (metatileLayerType == METATILE_LAYER_TYPE_NORMAL)
     {
-    case METATILE_LAYER_TYPE_NORMAL:
-        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[3], offset1, offset2, src);
-        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[1], offset1, offset2, src + 4);
-        break;
-    case METATILE_LAYER_TYPE_COVERED:
-        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[2], offset1, offset2, src);
-        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[3], offset1, offset2, src + 4);
-        break;
-    case METATILE_LAYER_TYPE_SPLIT:
-        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[2], offset1, offset2, src);
-        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[1], offset1, offset2, src + 4);
-        break;
+        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[2], offset1, offset2, src + 0);
+        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[3], offset1, offset2, src + 4);        
+        BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[1], offset1, offset2, src + 8);
     }
+    else
+    {
+        if (IsMetatileLayerEmpty(src))
+        {
+            BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[2], offset1, offset2, src + 4);
+            BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[3], offset1, offset2, src + 8);
+        }
+        else if (IsMetatileLayerEmpty(src + 4))
+        {
+            BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[2], offset1, offset2, src);
+            BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[3], offset1, offset2, src + 8);
+        }
+        else if (IsMetatileLayerEmpty(src + 8))
+        {
+            BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[2], offset1, offset2, src);
+            BuyMenuDrawMapMetatileLayer(sShopData->tilemapBuffers[3], offset1, offset2, src + 4);
+        }
+     }
 }
 
 static void BuyMenuDrawMapMetatileLayer(u16 *dest, s16 offset1, s16 offset2, const u16 *src)

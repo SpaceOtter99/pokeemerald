@@ -199,9 +199,9 @@ enum RandomTag
     RNG_TRACE,
     RNG_FICKLE_BEAM,
     RNG_AI_ABILITY,
-    RNG_AI_HASBADODDS,
+    RNG_AI_SWITCH_HASBADODDS,
+    RNG_AI_SWITCH_WONDER_GUARD,
     RNG_SHELL_SIDE_ARM,
-    RNG_DEXNAV_ENCOUNTER_LEVEL,
 };
 
 #define RandomWeighted(tag, ...) \
