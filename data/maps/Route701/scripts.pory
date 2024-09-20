@@ -1,5 +1,6 @@
 mapscripts Route701_MapScripts {}
 
 script Route701_Fisherman {
-	msgbox(format("Even all the way out here, the waters are filled with Magikarp"))
+	msgbox(format("Even all the way out here, the waters are filled with Magikarp.\n...\nI hate them so much."))
+	release
 }

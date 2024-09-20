@@ -45,6 +45,11 @@
 #include "mystery_gift.h"
 #include "union_room_chat.h"
 #include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/species.h"
+#include "script_pokemon_util.h"
+#include "constants/species.h"
+#include "script_pokemon_util.h"
 
 extern const u8 EventScript_ResetAllMapFlags[];
 
@@ -127,6 +132,14 @@ static void ClearFrontierRecord(void)
 static void WarpToTruck(void)
 {
     SetWarpDestination(MAP_GROUP(ROUTE701), MAP_NUM(ROUTE701), WARP_ID_NONE, 118, 9);
+    u8 evs[NUM_STATS]        = {0, 0, 0, 0, 0, 0};
+    u8 ivs[NUM_STATS]        = {MAX_PER_STAT_IVS + 1, MAX_PER_STAT_IVS + 1, MAX_PER_STAT_IVS + 1,   // We pass "MAX_PER_STAT_IVS + 1" here to ensure that
+                                MAX_PER_STAT_IVS + 1, MAX_PER_STAT_IVS + 1, MAX_PER_STAT_IVS + 1};  // ScriptGiveMonParameterized won't touch the stats' IV.
+    u16 moves[MAX_MON_MOVES] = {MOVE_TAKE_DOWN, MOVE_LEER, MOVE_BITE, MOVE_ROCK_SMASH};
+
+    ScriptGiveMonParameterized(0, 0, SPECIES_STOUTLAND, 38, 0, ITEM_POKE_BALL, NUM_NATURES, NUM_ABILITY_PERSONALITY, MON_GENDERLESS, evs, ivs, moves, FALSE, FALSE, NUMBER_OF_MON_TYPES);
+
+    FlagSet(FLAG_SYS_POKEMON_GET);
     WarpIntoMap();
 }
 
