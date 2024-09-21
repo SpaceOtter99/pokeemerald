@@ -237,8 +237,8 @@
 #define B_LAST_USED_BALL_CYCLE      TRUE       // If TRUE, then holding B_LAST_USED_BALL_BUTTON while pressing the D-Pad cycles through the balls
 
 // Other settings
-#define B_DOUBLE_WILD_CHANCE            5          // % chance of encountering two Pokémon in a Wild Encounter.
-#define B_DOUBLE_WILD_CHANCE_LONG_GRASS 20         // % chance of encountering two Pokémon in a Wild Encounter in Long Grass. 
+#define B_DOUBLE_WILD_CHANCE            2          // % chance of encountering two Pokémon in a Wild Encounter.
+#define B_DOUBLE_WILD_CHANCE_LONG_GRASS 30         // % chance of encountering two Pokémon in a Wild Encounter in Long Grass. 
 #define B_LONG_GRASS_LEVEL_BOOST        5          // Number of levels to increase max_level by for Wild Encounter in Long Grass.
 #define B_DOUBLE_WILD_REQUIRE_2_MONS    FALSE       // If set to TRUE, Wild Double Battles will default to Single Battles when the player only has 1 usable Pokémon, ignoring B_DOUBLE_WILD_CHANCE and B_FLAG_FORCE_DOUBLE_WILD.
 #define B_MULTI_BATTLE_WHITEOUT         GEN_LATEST // In Gen4+, multi battles end when the Player and also their Partner don't have any more Pokémon to fight.
