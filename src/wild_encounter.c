@@ -325,6 +325,12 @@ static u8 ChooseWildMonLevel(const struct WildPokemon *wildPokemon, u8 wildMonIn
             min = wildPokemon[wildMonIndex].maxLevel;
             max = wildPokemon[wildMonIndex].minLevel;
         }
+        s16 x, y;
+        PlayerGetDestCoords(&x, &y);
+        if (MetatileBehavior_IsLongGrass(MapGridGetMetatileBehaviorAt(x, y)))
+            max += B_LONG_GRASS_LEVEL_BOOST;
+
+
         range = max - min + 1;
         rand = Random() % range;
 
@@ -1119,12 +1125,18 @@ static void ApplyCleanseTagEncounterRateMod(u32 *encRate)
 
 bool8 TryDoDoubleWildBattle(void)
 {
+    u8 doubleWildChance = B_DOUBLE_WILD_CHANCE;
+    s16 x, y;
+    PlayerGetDestCoords(&x, &y);
+    if (MetatileBehavior_IsLongGrass(MapGridGetMetatileBehaviorAt(x, y)))
+        doubleWildChance = B_DOUBLE_WILD_CHANCE_LONG_GRASS;
+    
     if (GetSafariZoneFlag()
       || (B_DOUBLE_WILD_REQUIRE_2_MONS == TRUE && GetMonsStateToDoubles() != PLAYER_HAS_TWO_USABLE_MONS))
         return FALSE;
     else if (B_FLAG_FORCE_DOUBLE_WILD != 0 && FlagGet(B_FLAG_FORCE_DOUBLE_WILD))
         return TRUE;
-    else if (B_DOUBLE_WILD_CHANCE != 0 && ((Random() % 100) + 1 <= B_DOUBLE_WILD_CHANCE))
+    else if (doubleWildChance != 0 && ((Random() % 100) + 1 <= doubleWildChance))
         return TRUE;
     return FALSE;
 }
