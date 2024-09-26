@@ -599,6 +599,14 @@ static void Cmd_callnative(void);
 
 void (* const gBattleScriptingCommandsTable[])(void) =
 {
+    /*
+    INFO
+    Most attacks that do damage call attackcanceler
+    attackcanceler checks if the move fails for some reason, then proceeds to the next instruction
+    Each command afterwords also moves the instruction pointer along
+
+    So, if you want a pokemon to have multiple HP bars, this is the place to look!
+    */
     Cmd_attackcanceler,                          //0x0
     Cmd_accuracycheck,                           //0x1
     Cmd_attackstring,                            //0x2
