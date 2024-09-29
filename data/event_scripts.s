@@ -1076,3 +1076,5 @@ EventScript_VsSeekerChargingDone::
 	.include "data/text/birch_speech.inc"
 
 	.include "data/maps/Route701/scripts.inc"
+
+	.include "data/maps/SilphCity/scripts.inc"

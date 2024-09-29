@@ -4417,9 +4417,19 @@
       "width": 120,
       "height": 24,
       "primary_tileset": "gTileset_Base",
-      "secondary_tileset": "gTileset_Cave",
+      "secondary_tileset": "gTileset_Silph_City",
       "border_filepath": "data/layouts/Route701/border.bin",
       "blockdata_filepath": "data/layouts/Route701/map.bin"
+    },
+    {
+      "id": "LAYOUT_SILPH_CITY",
+      "name": "SilphCity_Layout",
+      "width": 60,
+      "height": 60,
+      "primary_tileset": "gTileset_Base",
+      "secondary_tileset": "gTileset_Silph_City",
+      "border_filepath": "data/layouts/SilphCity/border.bin",
+      "blockdata_filepath": "data/layouts/SilphCity/map.bin"
     }
   ]
 }

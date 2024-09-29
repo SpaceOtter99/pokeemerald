@@ -210,3 +210,6 @@ const u16 gMetatileAttributes_UnionRoom[] = INCBIN_U16("data/tilesets/secondary/
 
 const u16 gMetatiles_Base[] = INCBIN_U16("data/tilesets/primary/base/metatiles.bin");
 const u16 gMetatileAttributes_Base[] = INCBIN_U16("data/tilesets/primary/base/metatile_attributes.bin");
+
+const u16 gMetatiles_Silph_City[] = INCBIN_U16("data/tilesets/secondary/silph_city/metatiles.bin");
+const u16 gMetatileAttributes_Silph_City[] = INCBIN_U16("data/tilesets/secondary/silph_city/metatile_attributes.bin");
