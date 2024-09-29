@@ -167,6 +167,16 @@ struct UCoords32
     u32 y;
 };
 
+struct SaveBlock3
+{
+#if USE_DEXNAV_SEARCH_LEVELS == TRUE
+    u8 dexNavSearchLevels[ROUND_BITS_TO_BYTES(NUM_SPECIES)];
+#endif
+    u8 dexNavChain;
+}; /* max size 1624 bytes */
+
+extern struct SaveBlock3 *gSaveBlock3Ptr;
+
 struct Time
 {
     /*0x00*/ s16 days;
