@@ -23,7 +23,7 @@
                 ]
             },
             "linux": {
-                "miDebuggerPath": "${env:DEVKITARM}/bin/arm-none-eabi-gdb",
+                "miDebuggerPath": "/usr/bin/arm-none-eabi-gdb",
                 "setupCommands": [
                     {
                         "text": "shell \"mgba-qt\" -g \"${workspaceFolder}/pokeemerald.elf\" &"
