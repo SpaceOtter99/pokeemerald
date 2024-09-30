@@ -27,6 +27,7 @@ Route101_EventScript_StartBirchRescue::
 	setobjectxy LOCALID_BIRCH, 0, 15
 	setobjectxy LOCALID_ZIGZAGOON, 0, 16
 	applymovement OBJ_EVENT_ID_PLAYER, Route101_Movement_EnterScene
+	waitmovement 0
 	applymovement LOCALID_BIRCH, Route101_Movement_BirchRunAway1
 	applymovement LOCALID_ZIGZAGOON, Route101_Movement_ZigzagoonChase1
 	waitmovement 0
@@ -56,6 +57,15 @@ Route101_EventScript_PreventExitSouth::
 Route101_EventScript_PreventExitWest::
 	lockall
 	msgbox Route101_Text_DontLeaveMe, MSGBOX_DEFAULT
+	closemessage
+	applymovement OBJ_EVENT_ID_PLAYER, Route101_Movement_PreventExitWest
+	waitmovement 0
+	releaseall
+	end
+
+Route101_EventScript_PreventExitWestDanger::
+	lockall
+	msgbox Route101_Text_DontApproachMe, MSGBOX_DEFAULT
 	closemessage
 	applymovement OBJ_EVENT_ID_PLAYER, Route101_Movement_PreventExitWest
 	waitmovement 0
@@ -139,6 +149,9 @@ Route101_Movement_EnterScene:
 	walk_fast_up
 	walk_fast_up
 	walk_fast_up
+	walk_fast_up
+	walk_fast_left
+	walk_fast_left
 	walk_fast_up
 	walk_in_place_faster_left
 	step_end
@@ -225,7 +238,7 @@ Route101_EventScript_BirchsBag::
 	setflag FLAG_RESCUED_BIRCH
 	fadescreen FADE_TO_BLACK
 	removeobject LOCALID_ZIGZAGOON
-	setobjectxy OBJ_EVENT_ID_PLAYER, 6, 13
+	setobjectxy OBJ_EVENT_ID_PLAYER, 17, 23
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterLeft
 	waitmovement 0
 	special ChooseStarter
@@ -257,6 +270,7 @@ Route101_EventScript_HideBrendanInBedroom::
 	return
 
 Route101_Movement_BirchApproachPlayer:
+	walk_down
 	walk_right
 	step_end
 
@@ -272,6 +286,10 @@ Route101_Text_PleaseHelp:
 Route101_Text_DontLeaveMe:
 	.string "Wh-Where are you going?!\n"
 	.string "Don't leave me like this!$"
+
+Route101_Text_DontApproachMe:
+	.string "Wh-What are you doing?!\n"
+	.string "Get a POKéMON from my bag!$"
 
 Route101_Text_YouSavedMe:
 	.string "PROF. BIRCH: Whew…\p"
