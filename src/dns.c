@@ -41,7 +41,7 @@ struct TimeToFilter {
 // Example constant list of times and colours
 const struct TimeToFilter timeToFilterList[] = {
     // Midnight
-    { 0000 , RGB2(16,16,10) }, 
+    { 0 , RGB2(16,16,10) }, 
     // Sunrise
     { DNS_HOUR(MORNING_HOUR_BEGIN), RGB2(16, 16, 10) }, 
     { DNS_HOUR(MORNING_HOUR_BEGIN)+100, RGB2(0, 0, 10) },
@@ -60,19 +60,19 @@ const struct TimeToFilter timeToFilterList[] = {
 
 // Helper function to linearly interpolate between two colors
 u16 lerpColour(u16 colour1, u16 colour2, float t) {
-    u8 r1 = (colour1 >> 16) & 0xFF;
-    u8 g1 = (colour1 >> 8) & 0xFF;
-    u8 b1 = colour1 & 0xFF;
+    u8 r1 = GET_R(colour1);
+    u8 g1 = GET_G(colour1);
+    u8 b1 = GET_B(colour1);
     
-    u8 r2 = (colour2 >> 16) & 0xFF;
-    u8 g2 = (colour2 >> 8) & 0xFF;
-    u8 b2 = colour2 & 0xFF;
+    u8 r2 = GET_R(colour2);
+    u8 g2 = GET_G(colour2);
+    u8 b2 = GET_B(colour2);
     
     u8 r = r1 + t * (r2 - r1);
     u8 g = g1 + t * (g2 - g1);
     u8 b = b1 + t * (b2 - b1);
     
-    return (r << 16) | (g << 8) | b;
+    return RGB2(r,g,b);
 }
 
 // Function to find the interpolated colour based on the time
@@ -97,7 +97,7 @@ u16 getColourForTime(u16 currentTime) {
 
     // If no lower or upper bound is found, return black (default case)
     if (!lowerTime || !upperTime) {
-        return 0x000000;
+        return RGB2(0,0,0);
     }
 
     // If current time matches an exact time in the list, return its colour
@@ -111,27 +111,6 @@ u16 getColourForTime(u16 currentTime) {
     // Return the interpolated colour
     return lerpColour(lowerTime->colour, upperTime->colour, t);
 }
-
- 
-/* Timelapses */
-enum
-{
-    DNS_TIME_MIDNIGHT,
-    DNS_TIME_DAWN,
-    DNS_TIME_DAY,
-    DNS_TIME_SUNSET,
-    DNS_TIME_NIGHTFALL,
-    DNS_TIME_NIGHT
-};
-
-/* End hours for each of the timelapses */
-// See rtc.h
-#define MIDNIGHT_END_HOUR   NIGHT_HOUR_END       
-#define DAWN_END_HOUR       MORNING_HOUR_BEGIN + 1       
-#define DAY_END_HOUR        DAY_HOUR_END
-#define SUNSET_END_HOUR     EVENING_HOUR_END
-#define NIGHTFALL_END_HOUR  NIGHT_HOUR_BEGIN + 1
-#define NIGHT_END_HOUR      0
 
 /* Start and end hour of the lightning system.
  * This system is generally used for building's windows. */
@@ -557,32 +536,9 @@ static u16 GetDNSFilter()
 {
     u8 hour = gLocalTime.hours;    
     u8 minutes = gLocalTime.minutes;   
+    u8 convertedTime = (100 * hour) + minutes;
 
-    switch(GetDnsTimeLapse(hour))
-    {
-        case DNS_TIME_MIDNIGHT:
-            if (hour < 1)
-                return gMidnightFilters[minutes >> 3];            
-            else
-                return gMidnightFilters[7];
-
-        case DNS_TIME_DAWN:
-            return gDawnFilters[minutes >> 1];
-
-        case DNS_TIME_DAY:
-            return gDayFilter;
-
-        case DNS_TIME_SUNSET: 
-            return gSunsetFilters[minutes >> 1];
-
-        case DNS_TIME_NIGHTFALL:
-            return gNightfallFilters[minutes >> 1];
-
-        case DNS_TIME_NIGHT:
-            return gNightFilter;
-    }
-
-    return 0;
+    return getColourForTime(convertedTime);
 }
 
 static void DoDnsLightning()
@@ -606,6 +562,7 @@ static void DoDnsLightning()
 }
 
 //Returns Dns time lapse
+/*
 u8 GetDnsTimeLapse(u8 hour)
 {
     if (hour < MIDNIGHT_END_HOUR)
@@ -621,7 +578,7 @@ u8 GetDnsTimeLapse(u8 hour)
     else 
         return DNS_TIME_NIGHT;
 }
-
+*/
 //Checks if current map is affected by dns
 static bool8 IsMapDNSException()
 {
@@ -663,7 +620,7 @@ static bool8 IsCombat()
 
 static bool8 IsLightActive()
 {
-    if (gLocalTime.hours >= LIGHTNING_START_HOUR || gLocalTime.hours < LIGHTNING_END_HOUR)
+    if (gLocalTime.hours >= LIGHTING_START_HOUR || gLocalTime.hours < LIGHTING_END_HOUR)
         return TRUE;
     return FALSE;
 }
