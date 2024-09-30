@@ -22,6 +22,96 @@
  * It is highly recommended to read the following config*
  * options, to understand how the dns works.            *
  * ******************************************************/
+
+/* Custom Time Filters */
+#include <stdint.h>
+
+// Define the structure for time and colour mapping
+struct TimeToFilter {
+    u16 time;       // Time represented as hhmm
+    u16 colour;     // Colour
+};
+
+#define DNS_HOUR(t) (t*100)
+/* Start and end hour of the lighting system.
+ * This system is generally used for building's windows. */
+#define LIGHTING_START_HOUR    EVENING_HOUR_BEGIN
+#define LIGHTING_END_HOUR      MORNING_HOUR_BEGIN
+
+// Example constant list of times and colours
+const struct TimeToFilter timeToFilterList[] = {
+    // Midnight
+    { 0000 , RGB2(16,16,10) }, 
+    // Sunrise
+    { DNS_HOUR(MORNING_HOUR_BEGIN), RGB2(16, 16, 10) }, 
+    { DNS_HOUR(MORNING_HOUR_BEGIN)+100, RGB2(0, 0, 10) },
+    { DNS_HOUR(DAY_HOUR_BEGIN), RGB2(0, 0, 0) },
+    // Midday
+    { 1200, RGB2(0, 0, 0) },
+    // Sunset
+    { DNS_HOUR(EVENING_HOUR_BEGIN), RGB2(0, 0, 0)},
+    { DNS_HOUR(EVENING_HOUR_BEGIN)+30, RGB2(0, 7, 14)},
+    { DNS_HOUR(EVENING_HOUR_BEGIN)+100, RGB2(0, 14, 14)},
+    // Nightfall
+    { DNS_HOUR(NIGHT_HOUR_BEGIN), RGB2(16, 16, 10)},
+};
+
+#define NUM_ENTRIES (sizeof(timeToFilterList) / sizeof(timeToFilterList[0]))
+
+// Helper function to linearly interpolate between two colors
+u16 lerpColour(u16 colour1, u16 colour2, float t) {
+    u8 r1 = (colour1 >> 16) & 0xFF;
+    u8 g1 = (colour1 >> 8) & 0xFF;
+    u8 b1 = colour1 & 0xFF;
+    
+    u8 r2 = (colour2 >> 16) & 0xFF;
+    u8 g2 = (colour2 >> 8) & 0xFF;
+    u8 b2 = colour2 & 0xFF;
+    
+    u8 r = r1 + t * (r2 - r1);
+    u8 g = g1 + t * (g2 - g1);
+    u8 b = b1 + t * (b2 - b1);
+    
+    return (r << 16) | (g << 8) | b;
+}
+
+// Function to find the interpolated colour based on the time
+u16 getColourForTime(u16 currentTime) {
+    // Initialize pointers to store closest times
+    const struct TimeToFilter* lowerTime = NULL;
+    const struct TimeToFilter* upperTime = NULL;
+
+    // Loop through the list to find the closest lower and upper times
+    for (int i = 0; i < NUM_ENTRIES; i++) {
+        if (timeToFilterList[i].time <= currentTime) {
+            if (!lowerTime || timeToFilterList[i].time > lowerTime->time) {
+                lowerTime = &timeToFilterList[i];
+            }
+        }
+        if (timeToFilterList[i].time >= currentTime) {
+            if (!upperTime || timeToFilterList[i].time < upperTime->time) {
+                upperTime = &timeToFilterList[i];
+            }
+        }
+    }
+
+    // If no lower or upper bound is found, return black (default case)
+    if (!lowerTime || !upperTime) {
+        return 0x000000;
+    }
+
+    // If current time matches an exact time in the list, return its colour
+    if (lowerTime->time == upperTime->time) {
+        return lowerTime->colour;
+    }
+
+    // Compute the interpolation factor between the lower and upper time
+    float t = (float)(currentTime - lowerTime->time) / (upperTime->time - lowerTime->time);
+
+    // Return the interpolated colour
+    return lerpColour(lowerTime->colour, upperTime->colour, t);
+}
+
  
 /* Timelapses */
 enum
@@ -57,44 +147,54 @@ enum
 const struct LightingColour gLightingColours[] =
 {
     {
-        .paletteNum = 0,
-        .colourNum = 1,
-        .lightColour = RGB2(30, 30, 5),
-    },
-    {
-        .paletteNum = 0,
-        .colourNum = 2,
-        .lightColour = RGB2(26, 25, 4),
-    },
-    {
-        .paletteNum = 0,
-        .colourNum = 3,
-        .lightColour = RGB2(22, 21, 3),
-    },
-    {
         .paletteNum = 1,
-        .colourNum = 1,
+        .colourNum = 9,
         .lightColour = RGB2(30, 30, 5),
     },
     {
         .paletteNum = 1,
-        .colourNum = 2,
-        .lightColour = RGB2(26, 25, 4),
+        .colourNum = 10,
+        .lightColour = RGB2(29, 29, 5),
+    },
+    {
+        .paletteNum = 5,
+        .colourNum = 9,
+        .lightColour = RGB2(30, 30, 5),
+    },
+    {
+        .paletteNum = 5,
+        .colourNum = 10,
+        .lightColour = RGB2(29, 29, 5),
+    },
+    {
+        .paletteNum = 5,
+        .colourNum = 3,
+        .lightColour = RGB2(30, 30, 5),
+    },
+    {
+        .paletteNum = 5,
+        .colourNum = 4,
+        .lightColour = RGB2(29, 29, 5),
     },
     {
         .paletteNum = 6,
-        .colourNum = 1,
+        .colourNum = 9,
         .lightColour = RGB2(30, 30, 5),
     },
     {
         .paletteNum = 6,
-        .colourNum = 2,
-        .lightColour = RGB2(26, 25, 4),
+        .colourNum = 10,
+        .lightColour = RGB2(29, 29, 5),
     },
     {
-        .paletteNum = 6,
-        .colourNum = 3,
-        .lightColour = RGB2(22, 21, 3),
+        .paletteNum = 8,
+        .colourNum = 9,
+        .lightColour = RGB2(30, 30, 5),
+    },
+    {
+        .paletteNum = 8,
+        .colourNum = 10,
+        .lightColour = RGB2(29, 29, 5),
     },
 };
 
