@@ -31,7 +31,6 @@ build/
 .idea/
 porymap.*.cfg
 prefabs.json
-.vscode/
 *.ss1
 *.ss2
 *.ss3
