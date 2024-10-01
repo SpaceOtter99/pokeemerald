@@ -49,4 +49,4 @@ prefabs.json
 *.js
 src/data/map_group_count.h
 tools/trainerproc/trainerproc
-vscode/*.log
+*.log

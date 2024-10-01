@@ -10,6 +10,21 @@
         }
     ],
     "makefile.loggingLevel": "Debug",
-    "makefile.extensionLog": ".vscode/extension.log"
+    "makefile.extensionLog": ".vscode/extension.log",
+    "makefile.buildLog": "dryout.txt",
+    "files.associations": {
+        "ranges": "c",
+        "system_error": "c",
+        "array": "c",
+        "chrono": "c",
+        "compare": "c",
+        "functional": "c",
+        "istream": "c",
+        "ostream": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
+    }
 
 }
