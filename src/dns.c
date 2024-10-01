@@ -78,14 +78,12 @@ u16 lerpColour(u16 colour1, u16 colour2, float t) {
 
 // Function to find the interpolated colour based on the time
 u16 getColourForTime(u16 currentTime) {
-    DebugPrintf("Starting getColourForTime at %d\n{", currentTime);
     // Initialize pointers to store closest times
     const struct TimeToFilter* lowerTime = NULL;
     const struct TimeToFilter* upperTime = NULL;
 
     // Loop through the list to find the closest lower and upper times
     for (int i = 0; i < NUM_ENTRIES; i++) {
-        DebugPrintf("%d: %x,   ", timeToFilterList[i].time, timeToFilterList[i].colour);
         if (timeToFilterList[i].time <= currentTime) {
             if (!lowerTime || timeToFilterList[i].time > lowerTime->time) {
                 lowerTime = &timeToFilterList[i];
@@ -97,7 +95,6 @@ u16 getColourForTime(u16 currentTime) {
             }
         }
     }
-    DebugPrintf("}\nChose lowerTime {%d : %x} and upperTime {%d: %x}", lowerTime->time, lowerTime->colour, upperTime->time, upperTime->colour);
 
     // If no lower or upper bound is found, return black (default case)
     if (!lowerTime || !upperTime) {
@@ -384,8 +381,6 @@ static u16 GetDNSFilter()
     u8 hour = gLocalTime.hours;    
     u8 minutes = gLocalTime.minutes;   
     u16 convertedTime = (100 * hour) + minutes;
-
-    DebugPrintf("Current Time: %d : %d (%d)", hour, minutes, convertedTime);
 
     return getColourForTime(convertedTime);
 }
