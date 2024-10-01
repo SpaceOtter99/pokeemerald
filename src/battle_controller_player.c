@@ -12,6 +12,8 @@
 #include "battle_gimmick.h"
 #include "bg.h"
 #include "data.h"
+#include "decompress.h"
+#include "graphics.h"
 #include "item.h"
 #include "item_menu.h"
 #include "link.h"
@@ -86,6 +88,7 @@ static void HandleInputChooseMove(u32 battler);
 static void MoveSelectionDisplayPpNumber(u32 battler);
 static void MoveSelectionDisplayPpString(u32 battler);
 static void MoveSelectionDisplayMoveType(u32 battler);
+static void MoveSelectionDisplayMoveCategory(u32 battler);
 static void MoveSelectionDisplayMoveNames(u32 battler);
 static void MoveSelectionDisplayMoveDescription(u32 battler);
 static void HandleMoveSwitching(u32 battler);
@@ -100,6 +103,9 @@ static void Task_UpdateLvlInHealthbox(u8);
 static void PrintLinkStandbyMsg(void);
 
 static void ReloadMoveNames(u32 battler);
+
+static const u16 sSplitIcons_Pal[] = INCBIN_U16("graphics/interface/category_icons.gbapal");
+static const u8 sSplitIcons_Gfx[] = INCBIN_U8("graphics/interface/category_icons.4bpp");
 
 static void (*const sPlayerBufferCommands[CONTROLLER_CMDS_COUNT])(u32 battler) =
 {
@@ -1695,7 +1701,7 @@ static void MoveSelectionDisplayPpString(u32 battler)
 
 static void MoveSelectionDisplayPpNumber(u32 battler)
 {
-    u8 *txtPtr;
+    u8 *txtPtr = gDisplayedStringBattle, *end;
     struct ChooseMoveStruct *moveInfo;
 
     if (gBattleResources->bufferA[battler][2] == TRUE) // check if we didn't want to display pp number
@@ -1703,12 +1709,47 @@ static void MoveSelectionDisplayPpNumber(u32 battler)
 
     SetPpNumbersPaletteInMoveSelection(battler);
     moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
-    txtPtr = ConvertIntToDecimalStringN(gDisplayedStringBattle, moveInfo->currentPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
+
+    *(txtPtr)++ = EXT_CTRL_CODE_BEGIN;
+    *(txtPtr)++ = EXT_CTRL_CODE_FONT;
+    *(txtPtr)++ = FONT_SMALL_NARROWER;
+
+    txtPtr = ConvertIntToDecimalStringN(txtPtr, moveInfo->currentPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
+    
     *(txtPtr)++ = CHAR_SLASH;
     ConvertIntToDecimalStringN(txtPtr, moveInfo->maxPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
 
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP_REMAINING);
 }
+
+// different from pokemon_summary_screen
+#define TYPE_ICON_PALL_NUM_0     11
+#define TYPE_ICON_PALL_NUM_1     12
+#define TYPE_ICON_PALL_NUM_2     13
+static const u8 sMoveTypeToOamPaletteNum[NUMBER_OF_MON_TYPES] =
+{
+    [TYPE_NORMAL] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_FIGHTING] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_FLYING] = TYPE_ICON_PALL_NUM_1,
+    [TYPE_POISON] = TYPE_ICON_PALL_NUM_1,
+    [TYPE_GROUND] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_ROCK] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_BUG] = TYPE_ICON_PALL_NUM_2,
+    [TYPE_GHOST] = TYPE_ICON_PALL_NUM_1,
+    [TYPE_STEEL] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_MYSTERY] = TYPE_ICON_PALL_NUM_2,
+    [TYPE_FIRE] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_WATER] = TYPE_ICON_PALL_NUM_1,
+    [TYPE_GRASS] = TYPE_ICON_PALL_NUM_2,
+    [TYPE_ELECTRIC] = TYPE_ICON_PALL_NUM_0,
+    [TYPE_PSYCHIC] = TYPE_ICON_PALL_NUM_1,
+    [TYPE_ICE] = TYPE_ICON_PALL_NUM_1,
+    [TYPE_DRAGON] = TYPE_ICON_PALL_NUM_2,
+    [TYPE_DARK] = TYPE_ICON_PALL_NUM_0,
+    #ifdef TYPE_FAIRY
+    [TYPE_FAIRY] = TYPE_ICON_PALL_NUM_1, //based on battle_engine
+    #endif
+};
 
 static void MoveSelectionDisplayMoveType(u32 battler)
 {
@@ -1749,8 +1790,64 @@ static void MoveSelectionDisplayMoveType(u32 battler)
     }
 
     end = StringCopy(txtPtr, gTypesInfo[type].name);
+
+    /*
+    LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
+    LoadCompressedPalette(gMoveTypes_Pal, 0x10 * 11, 0x60);
+    
+    if (gMoveTypeIconSpriteId != 0xFF)
+    {
+        DestroySprite(&gSprites[gMoveTypeIconSpriteId]);
+        gMoveTypeIconSpriteId = 0xFF;
+    }
+    if (gMoveTypeIconSpriteId == 0xFF)
+    {
+        struct Sprite *sprite;
+        
+        sprite = &gSprites[gMoveTypeIconSpriteId];
+        gMoveTypeIconSpriteId = CreateSprite(&gSpriteTemplate_MoveTypes, 174, 128, 1);
+        sprite->oam.paletteNum = sMoveTypeToOamPaletteNum[type];
+        sprite->invisible = TRUE;
+        StartSpriteAnim(&gSprites[gMoveTypeIconSpriteId], type);
+        sprite->invisible = FALSE;
+    }
+    */
+
     PrependFontIdToFit(txtPtr, end, FONT_NORMAL, WindowWidthPx(B_WIN_MOVE_TYPE) - 25);
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
+
+    MoveSelectionDisplayMoveCategory(battler);
+}
+
+static void MoveSelectionDisplayMoveCategory(u32 battler)
+{
+    const u8 sCategoryIcons_Gfx[] = INCBIN_U8("graphics/interface/category_icons.4bpp");
+    struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
+    u8 cat = gMovesInfo[moveInfo->moves[gMoveSelectionCursor[battler]]].category;
+
+    LoadPalette(gCategoryIcons_Pal, BG_PLTT_ID(10), PLTT_SIZE_4BPP);
+    LoadPalette(&gPlttBufferUnfaded[5], BG_PLTT_ID(10), PLTT_SIZEOF(1));
+
+    DebugPrintf("%x, %x", gCategoryIcons_Pal[0], gCategoryIcons_Pal[1]);
+    BlitBitmapRectToWindow(B_WIN_MOVE_CTGRY, sCategoryIcons_Gfx + 0x80*cat, 0, 0, 16, 16, 0, 0, 16, 16);
+	PutWindowTilemap(B_WIN_MOVE_CTGRY);
+	CopyWindowToVram(B_WIN_MOVE_CTGRY, 3);
+
+    // Something weird going on with black backgrounds
+    // Maybe look at new item description popup tutorial?
+
+    /*
+
+    if (gMoveCategoryIconSpriteId != 0xFF)
+    {
+        DestroySprite(&gSprites[gMoveCategoryIconSpriteId]);
+        gMoveCategoryIconSpriteId = 0xFF;
+    }
+    if (gMoveCategoryIconSpriteId == 0xFF)
+        gMoveCategoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIcons, 174, 128, 1);    
+    
+    StartSpriteAnim(&gSprites[gMoveCategoryIconSpriteId], cat);
+    */
 }
 
 static void MoveSelectionDisplayMoveDescription(u32 battler)
