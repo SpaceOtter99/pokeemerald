@@ -3132,6 +3132,9 @@ static void BattleStartClearSetData(void)
     gMoveInfoSpriteId[MOVEINFO_DUMMY] = SPRITE_NONE;
 
     LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
+    LoadCompressedPalette(gMoveTypes_Pal, OBJ_PLTT_ID(13), 3 * PLTT_SIZE_4BPP);
+    LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIcons);
+    LoadSpritePalette(&gSpritePal_CategoryIcons);
 }
 
 void SwitchInClearSetData(u32 battler)

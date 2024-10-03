@@ -28,4 +28,13 @@ enum PokemonSummaryScreenMode
     SUMMARY_MODE_SELECT_MOVE,
 };
 
+static const u8 sContestCategoryToOamPaletteNum[CONTEST_CATEGORIES_COUNT] =
+{
+    [CONTEST_CATEGORY_COOL] = 13,
+    [CONTEST_CATEGORY_BEAUTY] = 14,
+    [CONTEST_CATEGORY_CUTE] = 14,
+    [CONTEST_CATEGORY_SMART] = 15,
+    [CONTEST_CATEGORY_TOUGH] = 13,
+};
+
 #endif // GUARD_POKEMON_SUMMARY_SCREEN_H

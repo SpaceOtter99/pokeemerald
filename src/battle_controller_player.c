@@ -1697,8 +1697,8 @@ static void MoveSelectionDisplayMoveNames(u32 battler)
 
 static void MoveSelectionDisplayPpString(u32 battler)
 {
-    StringCopy(gDisplayedStringBattle, gText_MoveInterfacePP);
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
+    //StringCopy(gDisplayedStringBattle, gText_MoveInterfacePP);
+    //BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
 }
 
 static void MoveSelectionDisplayPpNumber(u32 battler)
@@ -1716,12 +1716,10 @@ static void MoveSelectionDisplayPpNumber(u32 battler)
     *(txtPtr)++ = EXT_CTRL_CODE_FONT;
     *(txtPtr)++ = FONT_SMALL_NARROWER;
 
-    txtPtr = ConvertIntToDecimalStringN(txtPtr, moveInfo->currentPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
-    
-    *(txtPtr)++ = CHAR_SLASH;
+    txtPtr = StringCopy(txtPtr, gText_MoveInterfacePP);
     ConvertIntToDecimalStringN(txtPtr, moveInfo->maxPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
 
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP_REMAINING);
+    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
 }
 
 static void MoveSelectionDisplayMoveType(u32 battler)
@@ -1796,7 +1794,15 @@ static void MoveSelectionDisplayMoveType(u32 battler)
 static void MoveSelectionDisplayMoveTypeSprite(u8 type)
 {
     if (gMoveInfoSpriteId[MOVEINFO_TYPE] == SPRITE_NONE)
-        gMoveInfoSpriteId[MOVEINFO_TYPE] = CreateSprite(&gSpriteTemplate_MoveTypes, 184, 128, 1);    
+        gMoveInfoSpriteId[MOVEINFO_TYPE] = CreateSprite(&gSpriteTemplate_MoveTypes, 184, 144, 1);    
+    
+    struct Sprite *sprite = &gSprites[gMoveInfoSpriteId[MOVEINFO_TYPE]];
+    StartSpriteAnim(sprite, type);
+    if (type < NUMBER_OF_MON_TYPES)
+        sprite->oam.paletteNum = gTypesInfo[type].palette;
+    else
+        sprite->oam.paletteNum = sContestCategoryToOamPaletteNum[type - NUMBER_OF_MON_TYPES];
+    sprite->oam.priority = 0;
     
     StartSpriteAnim(&gSprites[gMoveInfoSpriteId[MOVEINFO_TYPE]], type);
 

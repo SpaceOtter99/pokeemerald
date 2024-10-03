@@ -220,9 +220,9 @@ static const struct WindowTemplate sStandardBattleWindowTemplates[] =
     },
     [B_WIN_PP] = {
         .bg = 0,
-        .tilemapLeft = 23,
-        .tilemapTop = 55,
-        .width = 2,
+        .tilemapLeft = 21,
+        .tilemapTop = 57,
+        .width = 3,
         .height = 2,
         .paletteNum = 5,
         .baseBlock = 0x0290,

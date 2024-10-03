@@ -24,7 +24,8 @@
         "ratio": "c",
         "tuple": "c",
         "type_traits": "c",
-        "utility": "c"
+        "utility": "c",
+        "pokemon_summary_screen.h": "c"
     }
 
 }

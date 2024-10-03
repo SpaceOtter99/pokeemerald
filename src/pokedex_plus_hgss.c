@@ -4315,14 +4315,6 @@ static void SetSpriteInvisibility(u8 spriteArrayId, bool8 invisible)
 {
     gSprites[sPokedexView->typeIconSpriteIds[spriteArrayId]].invisible = invisible;
 }
-static const u8 sContestCategoryToOamPaletteNum[CONTEST_CATEGORIES_COUNT] =
-{
-    [CONTEST_CATEGORY_COOL] = 13,
-    [CONTEST_CATEGORY_BEAUTY] = 14,
-    [CONTEST_CATEGORY_CUTE] = 14,
-    [CONTEST_CATEGORY_SMART] = 15,
-    [CONTEST_CATEGORY_TOUGH] = 13,
-};
 static void SetTypeIconPosAndPal(u8 typeId, u8 x, u8 y, u8 spriteArrayId)
 {
     struct Sprite *sprite;
