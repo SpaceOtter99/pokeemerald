@@ -1014,6 +1014,14 @@ struct QueuedStatBoost
 }; /* size = 8 */
 
 // All battle variables are declared in battle_main.c
+
+enum {
+    MOVEINFO_CATEGORY,
+    MOVEINFO_TYPE,
+    MOVEINFO_DUMMY,
+    MOVEINFO_COUNT
+};
+
 extern u16 gBattle_BG0_X;
 extern u16 gBattle_BG0_Y;
 extern u16 gBattle_BG1_X;
@@ -1131,6 +1139,8 @@ extern u16 gBallToDisplay;
 extern bool8 gLastUsedBallMenuPresent;
 extern u8 gPartyCriticalHits[PARTY_SIZE];
 extern u8 gCategoryIconSpriteId;
+extern u8 gMoveInfoSpriteId[MOVEINFO_COUNT];
+
 
 static inline u32 GetBattlerPosition(u32 battler)
 {

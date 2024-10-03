@@ -39,6 +39,7 @@
 #include "pokeball.h"
 #include "pokedex.h"
 #include "pokemon.h"
+#include "pokemon_summary_screen.h"
 #include "random.h"
 #include "recorded_battle.h"
 #include "roamer.h"
@@ -236,6 +237,7 @@ EWRAM_DATA bool8 gLastUsedBallMenuPresent = FALSE;
 EWRAM_DATA u8 gPartyCriticalHits[PARTY_SIZE] = {0};
 EWRAM_DATA static u8 sTriedEvolving = 0;
 EWRAM_DATA u8 gCategoryIconSpriteId = 0;
+EWRAM_DATA u8 gMoveInfoSpriteId[] = {0, 0, 0};
 
 void (*gPreBattleCallback1)(void);
 void (*gBattleMainFunc)(void);
@@ -3124,7 +3126,12 @@ static void BattleStartClearSetData(void)
     gBattleStruct->categoryOverride = FALSE; // used for Z-Moves and Max Moves
 
     gSelectedMonPartyId = PARTY_SIZE; // Revival Blessing
-    gCategoryIconSpriteId = 0xFF;
+    gCategoryIconSpriteId = SPRITE_NONE;
+    gMoveInfoSpriteId[MOVEINFO_CATEGORY] = SPRITE_NONE;
+    gMoveInfoSpriteId[MOVEINFO_TYPE] = SPRITE_NONE;
+    gMoveInfoSpriteId[MOVEINFO_DUMMY] = SPRITE_NONE;
+
+    LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
 }
 
 void SwitchInClearSetData(u32 battler)
