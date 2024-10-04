@@ -425,8 +425,8 @@ static void ZMoveSelectionDisplayMoveType(u16 zMove, u32 battler)
     *(txtPtr)++ = FONT_NORMAL;
 
     end = StringCopy(txtPtr, gTypesInfo[zMoveType].name);
-    PrependFontIdToFit(txtPtr, end, FONT_NORMAL, WindowWidthPx(B_WIN_MOVE_TYPE) - 25);
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
+    PrependFontIdToFit(txtPtr, end, FONT_NORMAL, WindowWidthPx(B_WIN_TYPE_NORMAL) - 25);
+    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_TYPE_NORMAL);
 }
 
 #define Z_EFFECT_BS_LENGTH  5

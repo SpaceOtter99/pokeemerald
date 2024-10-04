@@ -88,6 +88,7 @@ static void PlayerHandleBattleDebug(u32 battler);
 static void PlayerBufferRunCommand(u32 battler);
 static void HandleInputChooseTarget(u32 battler);
 static void HandleInputChooseMove(u32 battler);
+static void FreeAndDestroyInfoSprites();
 static void MoveSelectionDisplayPpNumber(u32 battler);
 static void MoveSelectionDisplayPpString(u32 battler);
 static void MoveSelectionDisplayMoveType(u32 battler);
@@ -345,6 +346,11 @@ static void HandleInputChooseAction(u32 battler)
         switch (gActionSelectionCursor[battler])
         {
         case 0: // Top left
+            LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
+            LoadCompressedPalette(gMoveTypes_Pal, OBJ_PLTT_ID(13), 3 * PLTT_SIZE_4BPP);
+            LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIcons);
+            LoadSpritePalette(&gSpritePal_CategoryIcons);
+
             BtlController_EmitTwoReturnValues(battler, BUFFER_B, B_ACTION_USE_MOVE, 0);
             break;
         case 1: // Top right
@@ -468,6 +474,7 @@ static void HandleInputChooseTarget(u32 battler)
     {
         PlaySE(SE_SELECT);
         gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_HideAsMoveTarget;
+        FreeAndDestroyInfoSprites();
         if (gBattleStruct->gimmick.playerSelect)
             BtlController_EmitTwoReturnValues(battler, BUFFER_B, 10, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
         else
@@ -626,6 +633,7 @@ static void HandleInputShowEntireFieldTargets(u32 battler)
     {
         PlaySE(SE_SELECT);
         HideAllTargets();
+        FreeAndDestroyInfoSprites();
         if (gBattleStruct->gimmick.playerSelect)
             BtlController_EmitTwoReturnValues(battler, BUFFER_B, 10, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
         else
@@ -654,6 +662,7 @@ static void HandleInputShowTargets(u32 battler)
     {
         PlaySE(SE_SELECT);
         HideShownTargets(battler);
+        FreeAndDestroyInfoSprites();
         if (gBattleStruct->gimmick.playerSelect)
             BtlController_EmitTwoReturnValues(battler, BUFFER_B, 10, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
         else
@@ -762,6 +771,7 @@ static void HandleInputChooseMove(u32 battler)
         {
         case 0:
         default:
+            FreeAndDestroyInfoSprites();
             if (gBattleStruct->gimmick.playerSelect)
                 BtlController_EmitTwoReturnValues(battler, BUFFER_B, 10, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
             else
@@ -800,6 +810,7 @@ static void HandleInputChooseMove(u32 battler)
         }
         else
         {
+            FreeAndDestroyInfoSprites();
             BtlController_EmitTwoReturnValues(battler, BUFFER_B, 10, 0xFFFF);
             HideGimmickTriggerSprite();
             PlayerBufferExecCompleted(battler);
@@ -1734,14 +1745,26 @@ static void MoveSelectionDisplayPpNumber(u32 battler)
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
 }
 
+static void FreeAndDestroyInfoSprites()
+{
+    gCategoryIconSpriteId = SPRITE_NONE;
+    if(gMoveInfoSpriteId[MOVEINFO_CATEGORY] != SPRITE_NONE)
+        DestroySpriteAndFreeResources(&gSprites[gMoveInfoSpriteId[MOVEINFO_CATEGORY]]);
+    if(gMoveInfoSpriteId[MOVEINFO_TYPE] != SPRITE_NONE)
+        DestroySpriteAndFreeResources(&gSprites[gMoveInfoSpriteId[MOVEINFO_TYPE]]);
+    if(gMoveInfoSpriteId[MOVEINFO_DUMMY] != SPRITE_NONE)
+        DestroySpriteAndFreeResources(&gSprites[gMoveInfoSpriteId[MOVEINFO_DUMMY]]);
+
+    gMoveInfoSpriteId[MOVEINFO_CATEGORY] = SPRITE_NONE;
+    gMoveInfoSpriteId[MOVEINFO_TYPE] = SPRITE_NONE;
+    gMoveInfoSpriteId[MOVEINFO_DUMMY] = SPRITE_NONE;
+}
+
 static void MoveSelectionDisplayMoveType(u32 battler)
 {
-    u8 *txtPtr, *end;
     u8 type;
     u32 speciesId;
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
-
-    txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfaceType);
 
     type = gMovesInfo[moveInfo->moves[gMoveSelectionCursor[battler]]].type;
 
@@ -1871,13 +1894,10 @@ static void MoveSelectionDisplayMovePowerAccuracy(u32 battler)
     *(txtPtrPow)++ = CHAR_POW;
 
 
-    u8 no_pow[] = _(" - ");
     u8 basePower = gMovesInfo[moveInfo->moves[gMoveSelectionCursor[battler]]].power;
-    DebugPrintf("Power: %d", basePower);
 
     if (basePower < 2)
     {
-        DebugPrintf("No power!");
         *(txtPtrPow)++ = CHAR_SPACE;
         *(txtPtrPow)++ = CHAR_SPACE;
         *(txtPtrPow)++ = CHAR_SPACE;

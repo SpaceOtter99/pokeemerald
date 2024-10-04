@@ -195,10 +195,10 @@
 #define CHAR_DPAD_NONE      0x0C
 
 // CHAR_EXTRA_SYMBOL chars
-#define CHAR_UP_ARROW_2    0x00
-#define CHAR_DOWN_ARROW_2  0x01
-#define CHAR_LEFT_ARROW_2  0x02
-#define CHAR_RIGHT_ARROW_2 0x03
+#define CHAR_ARROW_SE      0x00
+#define CHAR_ARROW_NE      0x01
+#define CHAR_ARROW_SE_STAB 0x02
+#define CHAR_ARROW_NE_STAB 0x03
 #define CHAR_PLUS_2        0x04
 #define CHAR_LV_2          0x05
 #define CHAR_PP            0x06
