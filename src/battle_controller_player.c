@@ -1,4 +1,5 @@
 #include "global.h"
+#include "constants/abilities.h"
 #include "battle.h"
 #include "battle_anim.h"
 #include "battle_arena.h"
@@ -47,6 +48,7 @@
 #include "level_caps.h"
 #include "menu.h"
 #include "pokemon_summary_screen.h"
+#include "battle_util.h"
 
 static void PlayerBufferExecCompleted(u32 battler);
 static void PlayerHandleLoadMonSprite(u32 battler);
@@ -90,6 +92,7 @@ static void MoveSelectionDisplayPpNumber(u32 battler);
 static void MoveSelectionDisplayPpString(u32 battler);
 static void MoveSelectionDisplayMoveType(u32 battler);
 static void MoveSelectionDisplayMoveCategory(u32 battler);
+static void MoveSelectionDisplayMovePowerAccuracy(u32 battler);
 static void MoveSelectionDisplayMoveTypeSprite(u8 type);
 static void MoveSelectionDisplayMoveNames(u32 battler);
 static void MoveSelectionDisplayMoveDescription(u32 battler);
@@ -170,6 +173,14 @@ static void (*const sPlayerBufferCommands[CONTROLLER_CMDS_COUNT])(u32 battler) =
     [CONTROLLER_DEBUGMENU]                = PlayerHandleBattleDebug,
     [CONTROLLER_TERMINATOR_NOP]           = BtlController_TerminatorNop
 };
+
+static u32 GetWeather(void)
+{
+    if (gBattleWeather == B_WEATHER_NONE || !WEATHER_HAS_EFFECT)
+        return B_WEATHER_NONE;
+    else
+        return gBattleWeather;
+}
 
 void SetControllerToPlayer(u32 battler)
 {
@@ -1703,7 +1714,7 @@ static void MoveSelectionDisplayPpString(u32 battler)
 
 static void MoveSelectionDisplayPpNumber(u32 battler)
 {
-    u8 *txtPtr = gDisplayedStringBattle, *end;
+    u8 *txtPtr = gDisplayedStringBattle;
     struct ChooseMoveStruct *moveInfo;
 
     if (gBattleResources->bufferA[battler][2] == TRUE) // check if we didn't want to display pp number
@@ -1715,6 +1726,7 @@ static void MoveSelectionDisplayPpNumber(u32 battler)
     *(txtPtr)++ = EXT_CTRL_CODE_BEGIN;
     *(txtPtr)++ = EXT_CTRL_CODE_FONT;
     *(txtPtr)++ = FONT_SMALL_NARROWER;
+    *(txtPtr)++ = CHAR_SPACE;
 
     txtPtr = StringCopy(txtPtr, gText_MoveInterfacePP);
     ConvertIntToDecimalStringN(txtPtr, moveInfo->maxPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
@@ -1760,35 +1772,9 @@ static void MoveSelectionDisplayMoveType(u32 battler)
             type = TYPE_STELLAR;
     }
 
-    end = StringCopy(txtPtr, gTypesInfo[type].name);
-
-    /*
-    LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
-    LoadCompressedPalette(gMoveTypes_Pal, 0x10 * 11, 0x60);
-    
-    if (gMoveTypeIconSpriteId != 0xFF)
-    {
-        DestroySprite(&gSprites[gMoveTypeIconSpriteId]);
-        gMoveTypeIconSpriteId = 0xFF;
-    }
-    if (gMoveTypeIconSpriteId == 0xFF)
-    {
-        struct Sprite *sprite;
-        
-        sprite = &gSprites[gMoveTypeIconSpriteId];
-        gMoveTypeIconSpriteId = CreateSprite(&gSpriteTemplate_MoveTypes, 174, 128, 1);
-        sprite->oam.paletteNum = sMoveTypeToOamPaletteNum[type];
-        sprite->invisible = TRUE;
-        StartSpriteAnim(&gSprites[gMoveTypeIconSpriteId], type);
-        sprite->invisible = FALSE;
-    }
-    */
-
-    PrependFontIdToFit(txtPtr, end, FONT_NORMAL, WindowWidthPx(B_WIN_MOVE_TYPE) - 25);
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
-
     MoveSelectionDisplayMoveCategory(battler);
     MoveSelectionDisplayMoveTypeSprite(type);
+    MoveSelectionDisplayMovePowerAccuracy(battler);
 }
 
 static void MoveSelectionDisplayMoveTypeSprite(u8 type)
@@ -1813,14 +1799,6 @@ static void MoveSelectionDisplayMoveCategory(u32 battler)
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
     u8 cat = gMovesInfo[moveInfo->moves[gMoveSelectionCursor[battler]]].category;
 
-    // Something weird going on with black backgrounds
-    // Maybe look at new item description popup tutorial?
-
-    // https://github.com/pret/pokeemerald/wiki/Random-Info,-Tips,-and-Tricks
-    // Maybe?
-    // Fuck this is hard
-
-
     if (gMoveInfoSpriteId[MOVEINFO_CATEGORY] != SPRITE_NONE)
     {
         DestroySprite(&gSprites[gMoveInfoSpriteId[MOVEINFO_CATEGORY]]);
@@ -1830,6 +1808,87 @@ static void MoveSelectionDisplayMoveCategory(u32 battler)
         gMoveInfoSpriteId[MOVEINFO_CATEGORY] = CreateSprite(&gSpriteTemplate_CategoryIcons, 174, 128, 1);    
     
     StartSpriteAnim(&gSprites[gMoveInfoSpriteId[MOVEINFO_CATEGORY]], cat);
+}
+
+static void MoveSelectionDisplayMovePowerAccuracy(u32 battler)
+{
+    struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
+    u32 target = GetDefaultMoveTarget(battler);
+
+    u32 accuracy = GetTotalAccuracy(
+        battler,
+        target,
+        moveInfo->moves[gMoveSelectionCursor[battler]],
+        GetBattlerAbility(battler), //atk
+        GetBattlerAbility(target),  //def
+        GetBattlerHoldEffect(battler, TRUE),
+        GetBattlerHoldEffect(target, TRUE)
+    );
+    DebugPrintf("Accuracy: %d", accuracy);
+
+
+    u8 *txtPtrAcc = gDisplayedStringBattle;
+
+    SetPpNumbersPaletteInMoveSelection(battler);
+    moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
+
+    *(txtPtrAcc)++ = EXT_CTRL_CODE_BEGIN;
+    *(txtPtrAcc)++ = EXT_CTRL_CODE_FONT;
+    *(txtPtrAcc)++ = FONT_SMALL_NARROWER;
+
+    *(txtPtrAcc)++ = CHAR_EXTRA_SYMBOL;
+    *(txtPtrAcc)++ = CHAR_ACC;
+
+    //txtPtrAcc = StringCopy(txtPtrAcc, acc_desc);
+    ConvertIntToDecimalStringN(txtPtrAcc, accuracy, STR_CONV_MODE_RIGHT_ALIGN, 3);
+
+    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_ACC);
+
+
+
+    u32 power = CalcMoveBasePowerAfterModifiers(
+        moveInfo->moves[gMoveSelectionCursor[battler]],
+        battler,
+        target,
+        gMovesInfo[moveInfo->moves[gMoveSelectionCursor[battler]]].type,
+        FALSE, //Don't update flags
+        GetBattlerAbility(battler), //atk
+        GetBattlerAbility(target),  //def
+        GetBattlerHoldEffect(battler, TRUE),
+        GetWeather()
+    );
+
+    u8 *txtPtrPow = gDisplayedStringBattle;
+
+    SetPpNumbersPaletteInMoveSelection(battler);
+    moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
+
+    *(txtPtrPow)++ = EXT_CTRL_CODE_BEGIN;
+    *(txtPtrPow)++ = EXT_CTRL_CODE_FONT;
+    *(txtPtrPow)++ = FONT_SMALL_NARROWER;
+
+    *(txtPtrPow)++ = CHAR_EXTRA_SYMBOL;
+    *(txtPtrPow)++ = CHAR_POW;
+
+
+    u8 no_pow[] = _(" - ");
+    u8 basePower = gMovesInfo[moveInfo->moves[gMoveSelectionCursor[battler]]].power;
+    DebugPrintf("Power: %d", basePower);
+
+    if (basePower < 2)
+    {
+        DebugPrintf("No power!");
+        *(txtPtrPow)++ = CHAR_SPACE;
+        *(txtPtrPow)++ = CHAR_SPACE;
+        *(txtPtrPow)++ = CHAR_SPACE;
+        *(txtPtrPow)++ = CHAR_HYPHEN;
+    }
+    else
+    {
+        ConvertIntToDecimalStringN(txtPtrPow, power, STR_CONV_MODE_RIGHT_ALIGN, 3);
+    }
+
+    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_POW);
 }
 
 static void MoveSelectionDisplayMoveDescription(u32 battler)

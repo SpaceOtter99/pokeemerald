@@ -461,8 +461,8 @@
 #define B_WIN_MOVE_NAME_3         5 // Bottom left
 #define B_WIN_MOVE_NAME_4         6 // Bottom right
 #define B_WIN_PP                  7
-#define B_WIN_MOVE_CTGRY          8
-#define B_WIN_PP_REMAINING        9
+#define B_WIN_MOVE_ACC          8
+#define B_WIN_MOVE_POW        9
 #define B_WIN_MOVE_TYPE          10
 #define B_WIN_SWITCH_PROMPT      11 // "Switch which?"
 #define B_WIN_YESNO              12

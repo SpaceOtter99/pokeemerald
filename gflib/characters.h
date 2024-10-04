@@ -205,6 +205,23 @@
 #define CHAR_ID            0x07
 #define CHAR_NO            0x08
 #define CHAR_UNDERSCORE    0x09
+#define CHAR_CIRCLE_1      0x0A
+#define CHAR_CIRCLE_2      0x0B
+#define CHAR_CIRCLE_3      0x0C
+#define CHAR_CIRCLE_4      0x0D
+#define CHAR_CIRCLE_5      0x0E
+#define CHAR_CIRCLE_6      0x0F
+#define CHAR_CIRCLE_7      0x10
+#define CHAR_CIRCLE_8      0x11
+#define CHAR_CIRCLE_9      0x12
+#define CHAR_R_PAREN       0x13
+#define CHAR_L_PAREN       0x14
+#define CHAR_TARGET        0x15
+#define CHAR_UP_TRIANGLE   0x16
+#define CHAR_CROSS_TRAN    0x17
+#define CHAR_ACC           0x18
+#define CHAR_POW           0x19
+
 
 #define EXT_CTRL_CODE_COLOR                  0x01
 #define EXT_CTRL_CODE_HIGHLIGHT              0x02
