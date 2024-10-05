@@ -12,6 +12,7 @@
 #include "battle_z_move.h"
 #include "battle_gimmick.h"
 #include "bg.h"
+#include "characters.h"
 #include "data.h"
 #include "decompress.h"
 #include "graphics.h"
@@ -96,6 +97,7 @@ static void MoveSelectionDisplayMoveCategory(u32 battler);
 static void MoveSelectionDisplayMovePowerAccuracy(u32 battler);
 static void MoveSelectionDisplayMoveTypeSprite(u8 type);
 static void MoveSelectionDisplayMoveNames(u32 battler);
+static void MoveSelectionDisplayMoveEffectiveness(u32 battler, u32 target);
 static void MoveSelectionDisplayMoveDescription(u32 battler);
 static void HandleMoveSwitching(u32 battler);
 static void SwitchIn_HandleSoundAndEnd(u32 battler);
@@ -486,6 +488,7 @@ static void HandleInputChooseTarget(u32 battler)
     }
     else if (JOY_NEW(B_BUTTON) || gPlayerDpadHoldFrames > 59)
     {
+        MoveSelectionDisplayMoveEffectiveness(battler, battler);
         PlaySE(SE_SELECT);
         gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_HideAsMoveTarget;
         gBattlerControllerFuncs[battler] = HandleInputChooseMove;
@@ -535,6 +538,8 @@ static void HandleInputChooseTarget(u32 battler)
                     i++;
                     break;
                 }
+
+                MoveSelectionDisplayMoveEffectiveness(battler, GetBattlerPosition(gMultiUsePlayerCursor));
 
                 if (gAbsentBattlerFlags & gBitTable[gMultiUsePlayerCursor]
                  || !CanTargetBattler(battler, gMultiUsePlayerCursor, move))
@@ -586,12 +591,14 @@ static void HandleInputChooseTarget(u32 battler)
                     break;
                 }
 
+                MoveSelectionDisplayMoveEffectiveness(battler, GetBattlerPosition(gMultiUsePlayerCursor));
                 if (gAbsentBattlerFlags & gBitTable[gMultiUsePlayerCursor]
                  || !CanTargetBattler(battler, gMultiUsePlayerCursor, move))
                     i = 0;
             } while (i == 0);
         }
 
+        MoveSelectionDisplayMoveEffectiveness(battler, GetBattlerPosition(gMultiUsePlayerCursor));
         gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_ShowAsMoveTarget;
     }
 }
@@ -1740,7 +1747,7 @@ static void MoveSelectionDisplayPpNumber(u32 battler)
     *(txtPtr)++ = CHAR_SPACE;
 
     txtPtr = StringCopy(txtPtr, gText_MoveInterfacePP);
-    ConvertIntToDecimalStringN(txtPtr, moveInfo->maxPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
+    ConvertIntToDecimalStringN(txtPtr, moveInfo->currentPp[gMoveSelectionCursor[battler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
 
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
 }
@@ -1798,6 +1805,7 @@ static void MoveSelectionDisplayMoveType(u32 battler)
     MoveSelectionDisplayMoveCategory(battler);
     MoveSelectionDisplayMoveTypeSprite(type);
     MoveSelectionDisplayMovePowerAccuracy(battler);
+    MoveSelectionDisplayMoveEffectiveness(battler, battler);
 }
 
 static void MoveSelectionDisplayMoveTypeSprite(u8 type)
@@ -1909,6 +1917,64 @@ static void MoveSelectionDisplayMovePowerAccuracy(u32 battler)
     }
 
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_POW);
+}
+
+static void MoveSelectionDisplayMoveEffectiveness(u32 battler, u32 target)
+{
+    struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
+    u32 move = moveInfo->moves[gMoveSelectionCursor[battler]];
+    u16 type = gMovesInfo[move].type;
+
+    uq4_12_t typeEffectiveness = UQ_4_12(1);
+
+    u16 battlerType1 = gBattleMons[battler].types[0];
+    u16 battlerType2 = gBattleMons[battler].types[1];
+    u16 battlerType3 = gBattleMons[battler].types[2];
+
+    u8 stab = ((battlerType1 == type) || (battlerType2 == type) || (battlerType3 == type)) && (type != TYPE_MYSTERY);
+
+    if (target != battler)
+    {
+        typeEffectiveness = CalcTypeEffectivenessMultiplier(move, type, battler, target, GetBattlerAbility(target), FALSE);
+    }
+
+    u8 symbol = CHAR_SPACER;
+
+    if (typeEffectiveness == 0)
+        symbol = CHAR_CROSS_TRAN;
+    else if (stab)
+        if (typeEffectiveness > UQ_4_12(1))
+            symbol = CHAR_ARROW_SE_STAB;
+        else if (typeEffectiveness < UQ_4_12(1))
+            symbol = CHAR_ARROW_NE_STAB;
+        else
+            symbol = CHAR_PLUS_2;
+    else
+        if (typeEffectiveness > UQ_4_12(1))
+            symbol = CHAR_ARROW_SE;
+        else if (typeEffectiveness < UQ_4_12(1))
+            symbol = CHAR_ARROW_NE;
+
+    u8 preSymbol = (symbol == CHAR_SPACER) ? CHAR_SPACE : CHAR_EXTRA_SYMBOL;
+
+    u16 temp[2] = {RGB2GBA(74,74,74), RGB2GBA(214,214,206)};
+
+    if (typeEffectiveness < UQ_4_12(1))
+    {
+        temp[0] = RGB2GBA(255, 0, 0);
+        temp[1] = RGB2GBA(255, 164, 98); //1 : .65 : .4
+    }
+    else if (typeEffectiveness > UQ_4_12(1))
+    {
+        temp[0] = RGB2GBA(0, 157, 0); //74 total
+        temp[1] = RGB2GBA(153, 200, 90);  //213.2 total
+    }
+    FillPalette(temp[0], B_WIN_MOVE_TYPE_PAL_TXT, PLTT_SIZEOF(1));
+    FillPalette(temp[1], B_WIN_MOVE_TYPE_PAL_SHA, PLTT_SIZEOF(1));
+
+    u8 arrowForType[] = {EXT_CTRL_CODE_BEGIN, EXT_CTRL_CODE_FONT, FONT_SMALL_NARROWER, preSymbol, symbol, EOS};
+    StringCopy(gDisplayedStringBattle, arrowForType);
+    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
 }
 
 static void MoveSelectionDisplayMoveDescription(u32 battler)
