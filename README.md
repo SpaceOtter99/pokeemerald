@@ -18,6 +18,7 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - Day/night system
 - Triple layer metatiles
 - Followers (The human ones)
+- Sideways Stairs
 
 ## What features are included?
 - ***IMPORTANT*❗❗ Read through these to learn what features you can toggle**:
