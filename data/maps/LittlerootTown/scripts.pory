@@ -1021,3 +1021,12 @@ LittlerootTown_Text_BirchSomethingToShowYouAtLab:
 	.string "Let's go to my LAB.$"
 
 `
+
+script SetFollower
+{
+	lock
+	faceplayer
+	setfollower(9,FOLLOWER_ALL,0, 0)
+	release
+	return
+}
