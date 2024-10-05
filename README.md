@@ -12,6 +12,12 @@ You can phrase it as the following:
 Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeemerald-expansion/
 ```
 
+## What's included in this version?
+- Stats screen showing type, physical/special, PP, power & accuracy, and effectiveness
+- Dexnav 
+- Day/night system
+- Triple layer metatiles
+
 ## What features are included?
 - ***IMPORTANT*❗❗ Read through these to learn what features you can toggle**:
     - [Battle configurations](https://github.com/rh-hideout/pokeemerald-expansion/blob/master/include/config/battle.h)
