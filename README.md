@@ -22,6 +22,7 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - Graphical TM Case
 
 ## TODO
+- Fix Graphical TM case sprites (not right colour / bouncing etc)
 - Rock Climb palette / sprites
 - Rock Climb HM label & sprite
 - Birds flying past randomly
