@@ -1329,7 +1329,7 @@ static u8 GetSwitchBagPocketDirection(void)
 }
 
 static void ChangeBagPocketId(u8 *bagPocketId, s8 deltaBagPocketId)
-{
+{    
     if (deltaBagPocketId == MENU_CURSOR_DELTA_RIGHT && *bagPocketId == POCKETS_COUNT - 1)
         *bagPocketId = 0;
     else if (deltaBagPocketId == MENU_CURSOR_DELTA_LEFT && *bagPocketId == 0)

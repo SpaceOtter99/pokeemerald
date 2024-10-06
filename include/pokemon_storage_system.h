@@ -74,6 +74,8 @@ u8 *GetWaldaPhrasePtr(void);
 void SetWaldaPhrase(const u8 *src);
 bool32 IsWaldaPhraseEmpty(void);
 
+void CB2_ReturnToPokeStorage(void);
+
 void EnterPokeStorage(u8 boxOption);
 u32 CountPartyNonEggMons(void);
 

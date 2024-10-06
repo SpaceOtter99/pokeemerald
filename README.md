@@ -19,6 +19,7 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - Triple layer metatiles
 - Followers (The human ones)
 - Sideways Stairs
+- Graphical TM Case
 
 ## What features are included?
 - ***IMPORTANT*❗❗ Read through these to learn what features you can toggle**:
