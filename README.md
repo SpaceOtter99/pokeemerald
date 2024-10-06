@@ -21,6 +21,16 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - Sideways Stairs
 - Graphical TM Case
 
+## TODO
+- Rock Climb palette / sprites
+- Rock Climb HM label & sprite
+- Birds flying past randomly
+- Berry Pouch
+- Hide TM bag menu, replace with something else
+- Faster text speed
+- Speed Surfing
+- Other tutorial stuff!
+
 ## What features are included?
 - ***IMPORTANT*❗❗ Read through these to learn what features you can toggle**:
     - [Battle configurations](https://github.com/rh-hideout/pokeemerald-expansion/blob/master/include/config/battle.h)
