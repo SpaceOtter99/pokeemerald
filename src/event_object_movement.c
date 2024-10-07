@@ -2625,6 +2625,7 @@ static void RemoveObjectEventIfOutsideView(struct ObjectEvent *objectEvent)
     if (objectEvent->initialCoords.x >= left && objectEvent->initialCoords.x <= right
      && objectEvent->initialCoords.y >= top && objectEvent->initialCoords.y <= bottom)
         return;
+    if (!(FlagGet(FLAG_FORCE_LOAD_OFFSCREEN_OBJEV) && objectEvent->graphicsId == OBJ_EVENT_GFX_PUSHABLE_BOULDER))
     RemoveObjectEvent(objectEvent);
 }
 
