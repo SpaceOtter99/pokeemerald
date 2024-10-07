@@ -96,7 +96,7 @@ struct DexNavSearch
     u8 iconSpriteId;
     u8 eyeSpriteId;
     u8 itemSpriteId;
-    u8 starSpriteIds[3];
+    u8 starSpriteIds[5];
     u8 ownedIconSpriteId;
     u8 exclamationSpriteId;
     u8 hiddenSearch:1;
@@ -118,7 +118,7 @@ struct DexNavGUI
     u8 environment;
     u8 potential;
     u8 typeIconSpriteIds[2];
-    u8 starSpriteIds[3];
+    u8 starSpriteIds[5];
 };
 
 // RAM
@@ -820,9 +820,8 @@ static void Task_SetUpDexNavSearch(u8 taskId)
     sDexNavSearchDataPtr->iconSpriteId = MAX_SPRITES;
     sDexNavSearchDataPtr->itemSpriteId = MAX_SPRITES;
     sDexNavSearchDataPtr->eyeSpriteId = MAX_SPRITES;
-    sDexNavSearchDataPtr->starSpriteIds[0] = MAX_SPRITES;
-    sDexNavSearchDataPtr->starSpriteIds[1] = MAX_SPRITES;
-    sDexNavSearchDataPtr->starSpriteIds[2] = MAX_SPRITES;
+    for (starNum = 0; starNum < NELEMS(sDexNavSearchDataPtr->starSpriteIds); starNum++)
+        sDexNavSearchDataPtr->starSpriteIds[starNum] = MAX_SPRITES;
     sDexNavSearchDataPtr->ownedIconSpriteId = MAX_SPRITES;
     sDexNavSearchDataPtr->exclamationSpriteId = MAX_SPRITES;    
     sDexNavSearchDataPtr->searchLevel = searchLevel;
@@ -1188,12 +1187,9 @@ static void DexNavUpdateSearchWindow(u8 proximity, u8 searchLevel)
     //init hidden sprites
     if (sDexNavSearchDataPtr->itemSpriteId != MAX_SPRITES)
         gSprites[sDexNavSearchDataPtr->itemSpriteId].invisible = TRUE;
-    if (sDexNavSearchDataPtr->starSpriteIds[0] != MAX_SPRITES)
-        gSprites[sDexNavSearchDataPtr->starSpriteIds[0]].invisible = TRUE;
-    if (sDexNavSearchDataPtr->starSpriteIds[1] != MAX_SPRITES)
-        gSprites[sDexNavSearchDataPtr->starSpriteIds[1]].invisible = TRUE;
-    if (sDexNavSearchDataPtr->starSpriteIds[2] != MAX_SPRITES)
-        gSprites[sDexNavSearchDataPtr->starSpriteIds[2]].invisible = TRUE;
+    for (int starNum = 0; starNum < NELEMS(sDexNavSearchDataPtr->starSpriteIds); starNum++)
+        if (sDexNavSearchDataPtr->starSpriteIds[starNum] != MAX_SPRITES)
+            gSprites[sDexNavSearchDataPtr->starSpriteIds[starNum]].invisible = TRUE;
     
     if (proximity <= SNEAKING_PROXIMITY)
     {
@@ -1448,92 +1444,25 @@ static u8 DexNavGeneratePotential(u8 searchLevel)
 {
     u8 genChance = 0;
     int randVal = Random() % 100;
-    
-    if (searchLevel < 5)
+    u8 searchLevelIndex;
+
+    for (searchLevelIndex = 1; searchLevelIndex < NUM_SEARCH_LEVELS; searchLevelIndex++)
     {
-        genChance = SEARCHLEVEL0_ONESTAR + SEARCHLEVEL0_TWOSTAR + SEARCHLEVEL0_THREESTAR;
-        if (randVal < genChance)
+        if (searchLevel < searchLevels[searchLevelIndex])
         {
-            // figure out which star it is
-            if (randVal < SEARCHLEVEL0_ONESTAR)
-                return 1;
-            else if (randVal < (SEARCHLEVEL0_ONESTAR + SEARCHLEVEL0_TWOSTAR))
-                return 2;
-            else
-                return 3;
+            break;
         }
     }
-    else if (searchLevel < 10)
+
+    for (int i = 0; i < NUM_DEXNAV_STARS; i++)
     {
-        genChance = SEARCHLEVEL5_ONESTAR + SEARCHLEVEL5_TWOSTAR + SEARCHLEVEL5_THREESTAR;
-        if (randVal < genChance)
+        if (randVal < SUMARR(encounterChances[searchLevelIndex], i))
         {
-            // figure out which star it is
-            if (randVal < SEARCHLEVEL5_ONESTAR)
-                return 1;
-            else if (randVal < (SEARCHLEVEL5_ONESTAR + SEARCHLEVEL5_TWOSTAR))
-                return 2;
-            else
-                return 3;
-        }
-    }
-    else if (searchLevel < 25)
-    {
-        genChance = SEARCHLEVEL10_ONESTAR + SEARCHLEVEL10_TWOSTAR + SEARCHLEVEL10_THREESTAR;
-        if (randVal < genChance)
-        {
-            // figure out which star it is
-            if (randVal < SEARCHLEVEL10_ONESTAR)
-                return 1;
-            else if (randVal < (SEARCHLEVEL10_ONESTAR + SEARCHLEVEL10_TWOSTAR))
-                return 2;
-            else
-                return 3;
-        }
-    }
-    else if (searchLevel < 50)
-    {
-        genChance = SEARCHLEVEL25_ONESTAR + SEARCHLEVEL25_TWOSTAR + SEARCHLEVEL25_THREESTAR;
-        if (randVal < genChance)
-        {
-            // figure out which star it is
-            if (randVal < SEARCHLEVEL25_ONESTAR)
-                return 1;
-            else if (randVal < (SEARCHLEVEL25_ONESTAR + SEARCHLEVEL25_TWOSTAR))
-                return 2;
-            else
-                return 3;
-        }
-    }
-    else if (searchLevel < 100)
-    {
-        genChance = SEARCHLEVEL50_ONESTAR + SEARCHLEVEL50_TWOSTAR + SEARCHLEVEL50_THREESTAR;
-        if (randVal < genChance)
-        {
-            // figure out which star it is
-            if (randVal < SEARCHLEVEL50_ONESTAR)
-                return 1;
-            else if (randVal < (SEARCHLEVEL50_ONESTAR + SEARCHLEVEL50_TWOSTAR))
-                return 2;
-            else
-                return 3;
-        }
-    }
-    else
-    {
-        genChance = SEARCHLEVEL100_ONESTAR + SEARCHLEVEL100_TWOSTAR + SEARCHLEVEL100_THREESTAR;
-        if (randVal < genChance)
-        {
-            // figure out which star it is
-            if (randVal < SEARCHLEVEL100_ONESTAR)
-                return 1;
-            else if (randVal < (SEARCHLEVEL100_ONESTAR + SEARCHLEVEL100_TWOSTAR))
-                return 2;
-            else
-                return 3;
+            return i+1;
         }
     }
     
+    DebugPrintf("DEXNAV.C: Something went wrong, code CHANSEY17");
     return 0;   // No potential
 }
 

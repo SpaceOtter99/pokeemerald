@@ -28,9 +28,7 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - Better reflection system (from tutorial bugfixes)
 
 ## TODO
-- Fix Graphical TM case sprites (not right colour / bouncing etc)
-- Rock Climb palette / sprites
-- Rock Climb HM label & sprite
+- URGENT: Dexnav LINE 1465 ish (TEST IT!!!!)
 - Birds flying past randomly
 - Berry Pouch
 - Hide TM bag menu, replace with something else
