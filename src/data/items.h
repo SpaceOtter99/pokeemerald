@@ -11878,8 +11878,9 @@ const struct Item gItemsInfo[] =
         .name = _("HM09"),
         .price = 0,
         .description = COMPOUND_STRING(
-            "A charging attack that may\n"
-            "confuse the foe."),
+            "A charging attack\n"
+            "that may confuse\n"
+            "the foe."),
         .importance = 1,
         .pocket = POCKET_TM_HM,
         .type = ITEM_USE_PARTY_MENU,
