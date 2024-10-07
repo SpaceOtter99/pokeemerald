@@ -20,6 +20,12 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - Followers (The human ones)
 - Sideways Stairs
 - Graphical TM Case
+- Low Helath Beeps aren't infinite
+- B Button cancels learning new moves
+- Text Speeds increased
+- FORCE_LOAD_FFSCREEN_OBJEV flag (for keeping offscreen objects loaded)
+- Added screen for missing flash memory to prevent crash
+- Better reflection system (from tutorial bugfixes)
 
 ## TODO
 - Fix Graphical TM case sprites (not right colour / bouncing etc)
