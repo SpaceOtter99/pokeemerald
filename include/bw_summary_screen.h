@@ -16,10 +16,11 @@
 
 // configs
 #define BW_SUMMARY_AUTO_FORMAT_MOVE_DESCRIPTIONS    TRUE                // automatically formats move descriptions to fit the new box size. disable if you want to format them manually
-#define BW_SUMMARY_NATURE_COLORS                    TRUE                // color stats increased or reduced by nature, red = boosted, blue = reduced
-#define BW_SUMMARY_NATURE_ARROWS                    FALSE               // arrows to show stats increased or reduced by nature
+#define BW_SUMMARY_NATURE_COLORS                    FALSE               // color stats increased or reduced by nature, red = boosted, blue = reduced
+#define BW_SUMMARY_NATURE_ARROWS                    TRUE                // arrows to show stats increased or reduced by nature
 #define BW_SUMMARY_CATEGORY_ICONS                   TRUE                // determines whether category (split) icons are shown or not
-#define BW_SUMMARY_IV_EV_DISPLAY                    BW_IV_EV_HIDDEN     // determines how to show IVs and EVs
+#define BW_SUMMARY_IV_EV_DISPLAY                    BW_IV_EV_GRADED     // determines how to show IVs and EVs
+#define BW_SUMMARY_IV_EV_DISPLAY_CYCLE              FALSE               // Whether or not the stat display can be cycled between EVs and IVs too
 #define BW_SUMMARY_DECAP                            FALSE               // indicates if summary screen-specific strings should be decapitalized
 #define BW_SUMMARY_SHOW_FRIENDSHIP                  FALSE               // show a heart that fills up to indicate friendship value
 #define BW_SUMMARY_BW_STATUS_ICONS                  TRUE                // use Gen 5 style status icons instead of the default ones.
@@ -31,6 +32,9 @@
 #define BW_SUMMARY_MON_IDLE_ANIMS                   TRUE                // loops the mon animations regularly as an "idle" anim
 #define BW_SUMMARY_MON_SHADOWS                      TRUE                // displays a shadow for the mon sprite
 #define BW_SUMMARY_SHOW_TERA_TYPE                   FALSE               // show tera type icons
+
+#define BW_SUMMARY_MOSAIC_TRANSITION_PAGE_ENABLE    FALSE               // Whether or not to do the mosaic effect when changing pages
+#define BW_SUMMARY_MOSAIC_TRANSITION_MOVE_ENABLE    TRUE                // Whether or not to do the mosaic effect when changing moves
 
 /* Info for users
 

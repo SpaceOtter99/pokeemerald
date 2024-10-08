@@ -1237,15 +1237,6 @@ static const struct SpriteTemplate sSpriteTemplate_MoveTypes =
     .callback = SpriteCallbackDummy
 };
 
-static const u8 sContestCategoryToOamPaletteNum[CONTEST_CATEGORIES_COUNT] =
-{
-    [CONTEST_CATEGORY_COOL] = 13,
-    [CONTEST_CATEGORY_BEAUTY] = 14,
-    [CONTEST_CATEGORY_CUTE] = 14,
-    [CONTEST_CATEGORY_SMART] = 15,
-    [CONTEST_CATEGORY_TOUGH] = 13,
-};
-
 static const union AnimCmd sSpriteAnim_TeraTypeNone[] = {
     ANIMCMD_FRAME(TYPE_NONE * 4, 0, FALSE, FALSE),
     ANIMCMD_END
@@ -2371,6 +2362,7 @@ static void Task_HandleInput(u8 taskId)
                     SwitchToMoveSelection(taskId);
                 }
             }
+            #if BW_SUMMARY_IV_EV_DISPLAY_CYCLE
             else
             {
                 if (BW_SUMMARY_IV_EV_DISPLAY != BW_IV_EV_HIDDEN)
@@ -2385,6 +2377,7 @@ static void Task_HandleInput(u8 taskId)
                         BufferAndPrintStats_HandleState(tSkillsState);
                 }
             }
+            #endif
         }
         else if (JOY_NEW(B_BUTTON))
         {
@@ -2658,6 +2651,7 @@ static void PssScroll(u8 taskId)
             SetGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
     }
     
+    #if BW_SUMMARY_MOSAIC_TRANSITION_PAGE_ENABLE
     // build up mosaic effect
     if (tScrollState <= 3)
     {
@@ -2675,6 +2669,10 @@ static void PssScroll(u8 taskId)
 
     if (tScrollState >= 8)
         gTasks[taskId].func = PssScrollEnd;
+
+    #else
+    gTasks[taskId].func = PssScrollEnd;
+    #endif
 }
 
 static void PssScrollEnd(u8 taskId)
@@ -3136,7 +3134,7 @@ static void Task_ShowEffectTilemap(u8 taskId)
     // set mosaic effect and appropriate tilemap buffer
     if (tMoveTaskState == 0)
     {
-        tMosaicStrength = 6;
+        tMosaicStrength = 6 * BW_SUMMARY_MOSAIC_TRANSITION_MOVE_ENABLE;
         SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
 
         if (sMonSummaryScreen->currPageIndex == PSS_PAGE_CONTEST_MOVES)
@@ -3150,7 +3148,7 @@ static void Task_ShowEffectTilemap(u8 taskId)
         tMoveTaskState++;
     }
     // attenuate mosaic effect
-    else if (tMoveTaskState <= 4)
+    else if (BW_SUMMARY_MOSAIC_TRANSITION_MOVE_ENABLE && tMoveTaskState <= 4)
     {
         tMosaicStrength -= 1;
         SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
@@ -3202,7 +3200,7 @@ static void Task_HideEffectTilemap(u8 taskId)
         tMoveTaskState++;
     }
     // dial up mosaic effect over time
-    else if (tMoveTaskState < 5)
+    else if (BW_SUMMARY_MOSAIC_TRANSITION_MOVE_ENABLE && tMoveTaskState < 5)
     {
         tMosaicStrength++;
         SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
