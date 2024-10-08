@@ -33,9 +33,6 @@
 #define BW_SUMMARY_MON_SHADOWS                      TRUE                // displays a shadow for the mon sprite
 #define BW_SUMMARY_SHOW_TERA_TYPE                   FALSE               // show tera type icons
 
-#define BW_SUMMARY_MOSAIC_TRANSITION_PAGE_ENABLE    FALSE               // Whether or not to do the mosaic effect when changing pages
-#define BW_SUMMARY_MOSAIC_TRANSITION_MOVE_ENABLE    TRUE                // Whether or not to do the mosaic effect when changing moves
-
 /* Info for users
 
 General tilemap setup
