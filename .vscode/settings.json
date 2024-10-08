@@ -1,15 +1,6 @@
 {
     "makefile.configureOnOpen": true,
-    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
-    "C_Cpp.default.compilerPath": "/usr/bin/arm-none-eabi-gcc",
-    "makefile.launchConfigurations": [
-        {
-            "cwd": "/home/heather/Documents/Misc Programming/ROM Hacks",
-            "binaryPath": "/home/heather/Documents/Misc Programming/ROM Hacks/pokeemerald.elf",
-            "binaryArgs": []
-        }
-    ],
-    "makefile.loggingLevel": "Debug",
+    "makefile.loggingLevel": "Verbose",
     "makefile.extensionLog": ".vscode/extension.log",
     "makefile.buildLog": ".vscode/dryout.log",
     "makefile.preConfigureScript": ".vscode/preconfigure.sh"
