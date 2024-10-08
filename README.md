@@ -26,13 +26,15 @@ Based off RHH's pokeemerald-expansion 1.9.2 https://github.com/rh-hideout/pokeem
 - FORCE_LOAD_FFSCREEN_OBJEV flag (for keeping offscreen objects loaded)
 - Added screen for missing flash memory to prevent crash
 - Better reflection system (from tutorial bugfixes)
+- Creeping (holding A whilst moving) reduces wild encounters
+- Custom DexNav system (allows up to 5 IV pokemon)
 
 ## TODO
 - URGENT: Dexnav LINE 1465 ish (TEST IT!!!!)
+- Dexnav Menu for fishing, headbutts, rock smash
 - Birds flying past randomly
 - Berry Pouch
 - Hide TM bag menu, replace with something else
-- Faster text speed
 - Speed Surfing
 - Other tutorial stuff!
 
