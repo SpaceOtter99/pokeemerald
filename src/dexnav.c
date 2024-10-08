@@ -820,7 +820,7 @@ static void Task_SetUpDexNavSearch(u8 taskId)
     sDexNavSearchDataPtr->iconSpriteId = MAX_SPRITES;
     sDexNavSearchDataPtr->itemSpriteId = MAX_SPRITES;
     sDexNavSearchDataPtr->eyeSpriteId = MAX_SPRITES;
-    for (starNum = 0; starNum < NELEMS(sDexNavSearchDataPtr->starSpriteIds); starNum++)
+    for (u8 starNum = 0; starNum < NELEMS(sDexNavSearchDataPtr->starSpriteIds); starNum++)
         sDexNavSearchDataPtr->starSpriteIds[starNum] = MAX_SPRITES;
     sDexNavSearchDataPtr->ownedIconSpriteId = MAX_SPRITES;
     sDexNavSearchDataPtr->exclamationSpriteId = MAX_SPRITES;    
@@ -1069,7 +1069,7 @@ static void Task_DexNavSearch(u8 taskId)
         return;
     }
     
-    if (sDexNavSearchDataPtr->proximity <= CREEPING_PROXIMITY && !gPlayerAvatar.creeping && task->tFrameCount > 60)
+    if (sDexNavSearchDataPtr->proximity < CREEPING_PROXIMITY && !gPlayerAvatar.creeping && task->tFrameCount > 60)
     { //should be creeping but player walks normally
         if (sDexNavSearchDataPtr->hiddenSearch && !task->tRevealed)
             EndDexNavSearch(taskId);
@@ -1442,6 +1442,23 @@ static u8 DexNavGetAbilityNum(u16 species, u8 searchLevel)
 
 static u8 DexNavGeneratePotential(u8 searchLevel)
 {
+
+    #define NUM_SEARCH_LEVELS 9
+    #define NUM_DEXNAV_STARS 5
+    u8 searchLevels[] = {00, 05, 10, 25, 50, 100, 150, 200, 250};
+    //Chance of encountering X star potential
+    u8 encounterChancesDexnav[NUM_SEARCH_LEVELS][NUM_DEXNAV_STARS] = {
+        {01, 00, 00, 00, 00},   //0
+        {05, 01, 00, 00, 00},   //5
+        {10, 05, 01, 00, 00},   //10
+        {15, 10, 05, 01, 00},   //25
+        {25, 15, 10, 05, 01},   //50
+        {15, 25, 15, 10, 05},   //100
+        {10, 15, 25, 15, 10},   //150
+        {10, 10, 15, 25, 15},   //200
+        {10, 10, 10, 15, 25}   //250
+    };
+
     u8 genChance = 0;
     int randVal = Random() % 100;
     u8 searchLevelIndex;
@@ -1454,9 +1471,13 @@ static u8 DexNavGeneratePotential(u8 searchLevel)
         }
     }
 
-    for (int i = 0; i < NUM_DEXNAV_STARS; i++)
-    {
-        if (randVal < SUMARR(encounterChances[searchLevelIndex], i))
+    for (u8 i = 0; i < NUM_DEXNAV_STARS; i++)
+    {    
+        u16 sumVal = 0;                  
+        for (int _i = 0; _i <= i; _i++) { 
+            sumVal += encounterChancesDexnav[searchLevelIndex][_i];         
+        }                              
+        if (randVal < sumVal)
         {
             return i+1;
         }

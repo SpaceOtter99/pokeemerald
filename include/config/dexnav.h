@@ -6,7 +6,7 @@
 
 // search parameters
 #define DEXNAV_TIMEOUT                  900  //15 seconds is the time out. Max of 1092 seconds allowed
-#define SNEAKING_PROXIMITY              0   //Tile amount
+#define SNEAKING_PROXIMITY              5   //Tile amount
 #define CREEPING_PROXIMITY              0
 #define MAX_PROXIMITY                   20
 
@@ -43,31 +43,5 @@
 #define SEARCHLEVEL50_ITEM              6
 #define SEARCHLEVEL100_ITEM             12
 #define SEARCH_LEVEL_ITEM {0, 0, 1, 5, 10, 10, 15, 20, 25}
-
-u8 searchLevels[] = {00, 05, 10, 25, 50, 100, 150, 200, 250};
-#define NUM_SEARCH_LEVELS 9
-#define NUM_DEXNAV_STARS 5
-//Chance of encountering X star potential
-u8 encounterChances[NUM_SEARCH_LEVELS][NUM_DEXNAV_STARS] = {
-    {01, 00, 00, 00, 00},   //0
-    {05, 01, 00, 00, 00},   //5
-    {10, 05, 01, 00, 00},   //10
-    {15, 10, 05, 01, 00},   //25
-    {25, 15, 10, 05, 01},   //50
-    {15, 25, 15, 10, 05},   //100
-    {10, 15, 25, 15, 10},   //150
-    {10, 10, 15, 25, 15},   //200
-    {10, 10, 10, 15, 25},   //250
-
-}
-
-#define SUMARR(arr, index) ({         \
-    int _sum = 0;                  \
-    for (int _i = 0; _i <= (index); _i++) { \
-        _sum += (arr)[_i];         \
-    }                              \
-    _sum;                          \
-})
-
 
 #endif // GUARD_CONFIG_DEXNAV_H
