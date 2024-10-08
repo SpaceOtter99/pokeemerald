@@ -762,7 +762,14 @@ static bool8 CheckStandardWildEncounter(u16 metatileBehavior)
     if (FlagGet(OW_FLAG_NO_ENCOUNTER))
         return FALSE;
 
-    if (sWildEncounterImmunitySteps < 4)
+    if (sWildEncounterImmunitySteps < WILD_ENCOUNTER_IMMUNITY_STEPS)
+    {
+        sWildEncounterImmunitySteps++;
+        sPrevMetatileBehavior = metatileBehavior;
+        return FALSE;
+    }
+    
+    if (gPlayerAvatar.creeping && sWildEncounterImmunitySteps < WILD_ENCOUNTER_IMMUNITY_STEPS_CREEPING)
     {
         sWildEncounterImmunitySteps++;
         sPrevMetatileBehavior = metatileBehavior;
