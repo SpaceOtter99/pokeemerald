@@ -26,13 +26,13 @@ enum {
 
 struct WindowTemplate
 {
-    u8 bg;
-    u8 tilemapLeft;
-    u8 tilemapTop;
-    u8 width;
-    u8 height;
-    u8 paletteNum;
-    u16 baseBlock;
+    u8 bg;              // which bg layer to print text on
+    u8 tilemapLeft;     // position from left (per 8 pixels)
+    u8 tilemapTop;      // position from top (per 8 pixels)
+    u8 width;           // width of area (per 8 pixels)
+    u8 height;          // height of area (per 8 pixels)
+    u8 paletteNum;      // palette index to use for text
+    u16 baseBlock;      // tile start in VRAM
 };
 
 #define DUMMY_WIN_TEMPLATE          \
