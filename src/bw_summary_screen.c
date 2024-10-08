@@ -315,6 +315,7 @@ static void BufferHPStats(void);
 static void PrintHPStats(u8);
 static void BufferNonHPStats(void);
 static void PrintNonHPStats(void);
+static void BufferAndPrintEVs(void);
 static void PrintExpPointsNextLevel(void);
 static void PrintBattleMoves(void);
 static void Task_PrintBattleMoves(u8);
@@ -376,7 +377,7 @@ static void RunMonAnimTimer(void);
 
 static const u8 sMemoNatureTextColor[]                      = _("{COLOR DYNAMIC_COLOR2}{SHADOW DYNAMIC_COLOR3}");
 static const u8 sMemoMiscTextColor[]                        = _("{COLOR WHITE}{SHADOW DARK_GRAY}");
-static const u8 sStatsHPLayout[]                            = _("{DYNAMIC 0}/{DYNAMIC 1}");
+static const u8 sStatsHPLayout[]                            = _("{DYNAMIC 1}");
 static const u8 sStatsHPIVEVLayout[]                        = _("{DYNAMIC 0}");
 static const u8 sStatsNonHPLayout[]                         = _("{DYNAMIC 0}\n{DYNAMIC 1}\n{DYNAMIC 2}\n{DYNAMIC 3}\n{DYNAMIC 4}");
 static const u8 sMovesPPLayout[]                            = _("{PP}{CLEAR_TO 31}{DYNAMIC 0}/{DYNAMIC 1}");
@@ -2527,10 +2528,12 @@ static void Task_ChangeSummaryMon(u8 taskId)
         } 
         else if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS)
         {
+            #if BW_SUMMARY_IV_EV_DISPLAY_CYCLE
             if (BW_SUMMARY_IV_EV_DISPLAY == BW_IV_EV_PRECISE)
                 DrawNextSkillsButtonPrompt(SKILL_STATE_STATS);
             else if (BW_SUMMARY_IV_EV_DISPLAY == BW_IV_EV_GRADED)
                 DrawNextSkillsButtonPrompt(SKILL_STATE_IVS);
+            #endif
         }
         break;
     case 12:
@@ -3280,14 +3283,15 @@ static void HandleAppealJamTilemap(u16 move)
 
 #define HP_BAR_TILEMAP_START_ROW_1 0x069
 #define HP_BAR_TILEMAP_START_ROW_2 0x089
-#define HP_BAR_TILE_EMPTY_ROW_1    0x5110
-#define HP_BAR_TILE_FULL_ROW_1     0x5118
+#define HP_BAR_TILE_EMPTY_ROW_1    0x5110       //0101 0001 0001 0000
+#define HP_BAR_TILE_FULL_ROW_1     0x5118       //0101 0001 0001 1000
 #define HP_BAR_TILE_EMPTY_ROW_2    0x5120
 #define HP_BAR_TILE_FULL_ROW_2     0x5128
 
 static void DrawHPBar(struct Pokemon *unused)
 {
     s64 numHPBarTicks;
+    u8 hpBarLength = 8;
     u16 *dst1, *dst2;
     u8 i;
 
@@ -3296,7 +3300,7 @@ static void DrawHPBar(struct Pokemon *unused)
         // Calculate the number of 1-pixel "ticks" to illuminate in the HP bar.
         // There are 8 tiles that make up the bar, and each tile has 8 "ticks". Hence, the numerator
         // is multiplied by 64.
-        numHPBarTicks = sMonSummaryScreen->summary.currentHP * 64 / sMonSummaryScreen->summary.maxHP;
+        numHPBarTicks = sMonSummaryScreen->summary.currentHP * (8 * hpBarLength) / sMonSummaryScreen->summary.maxHP;
         if (numHPBarTicks == 0 && sMonSummaryScreen->summary.currentHP != 0)
             numHPBarTicks = 1;
     }
@@ -3307,7 +3311,7 @@ static void DrawHPBar(struct Pokemon *unused)
 
     dst1 = &sMonSummaryScreen->bg2TilemapBuffers[PSS_PAGE_SKILLS][HP_BAR_TILEMAP_START_ROW_1];
     dst2 = &sMonSummaryScreen->bg2TilemapBuffers[PSS_PAGE_SKILLS][HP_BAR_TILEMAP_START_ROW_2];
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < hpBarLength; i++)
     {
         if (numHPBarTicks > 7)
         {
@@ -4056,6 +4060,7 @@ static void PrintSkillsPageText(void)
     BufferNonHPStats();
     PrintNonHPStats();
     PrintExpPointsNextLevel();
+    BufferAndPrintEVs();
 }
 
 static void Task_PrintSkillsPage(u8 taskId)
@@ -4086,6 +4091,9 @@ static void Task_PrintSkillsPage(u8 taskId)
         PrintExpPointsNextLevel();
         break;
     case 8:
+        BufferAndPrintEVs();
+        break;
+    case 9:
         DestroyTask(taskId);
         return;
     }
@@ -4142,8 +4150,9 @@ static void BufferStat(u8 *dst, s8 statIndex, u32 stat, u32 strId, u32 align)
     static const u8 sTextNatureDown[] = _("{COLOR}{08}");
     static const u8 sTextNatureUp[] = _("{COLOR}{05}");
     static const u8 sTextNatureNeutral[] = _("{COLOR}{01}");
-    static const u8 sTextUpArrow[] = _(" {UP_ARROW}");
-    static const u8 sTextDownArrow[] = _(" {DOWN_ARROW}");
+    static const u8 sTextUpArrow[] = _("{FONT_NARROWER}{UP_ARROW}{RESET_FONT}{FONT_SHORT}");
+    static const u8 sTextDownArrow[] = _("{FONT_NARROWER}{DOWN_ARROW}{RESET_FONT}{FONT_SHORT}");
+    static const u8 sTextNothing[] = _("{FONT_NARROWER}{NO_ARROW}{RESET_FONT}{FONT_SHORT}");
     u8 *txtPtr;
 
     if (statIndex == 0 
@@ -4157,17 +4166,19 @@ static void BufferStat(u8 *dst, s8 statIndex, u32 stat, u32 strId, u32 align)
     else
         txtPtr = StringCopy(dst, sTextNatureNeutral);
 
-    ConvertIntToDecimalStringN(txtPtr, stat, STR_CONV_MODE_RIGHT_ALIGN, align);
-
     if (statIndex != 0 
         && BW_SUMMARY_NATURE_ARROWS 
         && gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp != gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown)
     {
         if (statIndex == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp)
-            StringAppend(txtPtr, sTextUpArrow);
+            txtPtr = StringCopy(dst, sTextUpArrow);
         else if (statIndex == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown)
-            StringAppend(txtPtr, sTextDownArrow);
+            txtPtr = StringCopy(dst, sTextDownArrow);
+        else
+            txtPtr = StringCopy(dst, sTextNothing);
     }
+
+    ConvertIntToDecimalStringN(txtPtr, stat, STR_CONV_MODE_RIGHT_ALIGN, align);
 
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(strId, dst);
 }
@@ -4229,6 +4240,7 @@ static void BufferAndPrintStats_HandleState(u8 mode)
         BufferStat(gStringVar4, STAT_SPDEF, spD, 3, 3);
         BufferStat(sStringVar5, STAT_SPEED, spe, 4, 3);
         PrintNonHPStats();
+        BufferAndPrintEVs();
     }
     else
     {
@@ -4244,6 +4256,7 @@ static void BufferAndPrintStats_HandleState(u8 mode)
         BufferStat(gStringVar4, 0, spD, 3, 3);
         BufferStat(sStringVar5, 0, spe, 4, 3);
         PrintNonHPStats();
+        BufferAndPrintEVs();
     }
 
     Free(currentHPString); 
@@ -4270,9 +4283,9 @@ static void BufferHPStats(void)
 static void PrintHPStats(u8 mode)
 {
     if (mode == SKILL_STATE_STATS)
-        PrintTextOnWindow(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_HP), gStringVar4, 19, 0, 0, 0);
+        PrintTextOnWindow(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_HP), gStringVar4, 10, 0, 0, 0);
     else
-        PrintTextOnWindow(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_HP), gStringVar4, 6, 0, 0, 0);
+        PrintTextOnWindow(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_HP), gStringVar4, 10, 0, 0, 0);
 }
 
 
@@ -4288,12 +4301,31 @@ static void BufferNonHPStats(void)
 
 static void PrintNonHPStats(void)
 {
+    u8 nonHPStatX = 2;
     u8 windowId = AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_NON_HP);
-    PrintTextOnWindow(windowId, gStringVar1, 30, 4, 0, 0);
-    PrintTextOnWindow(windowId, gStringVar2, 30, 16, 0, 0);
-    PrintTextOnWindow(windowId, gStringVar3, 30, 28, 0, 0);
-    PrintTextOnWindow(windowId, gStringVar4, 30, 40, 0, 0);
-    PrintTextOnWindow(windowId, sStringVar5, 30, 52, 0, 0);
+    PrintTextOnWindowWithFont(windowId, gStringVar1, nonHPStatX,  4, 0, 0, FONT_SMALL_NARROWER);
+    PrintTextOnWindowWithFont(windowId, gStringVar2, nonHPStatX, 16, 0, 0, FONT_SMALL_NARROWER);
+    PrintTextOnWindowWithFont(windowId, gStringVar3, nonHPStatX, 28, 0, 0, FONT_SMALL_NARROWER);
+    PrintTextOnWindowWithFont(windowId, gStringVar4, nonHPStatX, 40, 0, 0, FONT_SMALL_NARROWER);
+    PrintTextOnWindowWithFont(windowId, sStringVar5, nonHPStatX, 52, 0, 0, FONT_SMALL_NARROWER);
+}
+
+static void BufferAndPrintEVs(void)
+{
+    DynamicPlaceholderTextUtil_Reset();
+    BufferStat(gStringVar1, STAT_ATK, sMonSummaryScreen->summary.evAtk, 0, 3);
+    BufferStat(gStringVar2, STAT_DEF, sMonSummaryScreen->summary.evDef, 1, 3);
+    BufferStat(gStringVar3, STAT_SPATK, sMonSummaryScreen->summary.evSpatk, 2, 3);
+    BufferStat(gStringVar4, STAT_SPDEF, sMonSummaryScreen->summary.evSpdef, 3, 3);
+    BufferStat(sStringVar5, STAT_SPEED, sMonSummaryScreen->summary.evSpeed, 4, 3);
+
+    u8 nonHPStatX = 8;
+    u8 windowId = AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_NON_HP);
+    PrintTextOnWindow(windowId, gStringVar1, nonHPStatX, 4, 0, 0);
+    PrintTextOnWindow(windowId, gStringVar2, nonHPStatX, 16, 0, 0);
+    PrintTextOnWindow(windowId, gStringVar3, nonHPStatX, 28, 0, 0);
+    PrintTextOnWindow(windowId, gStringVar4, nonHPStatX, 40, 0, 0);
+    PrintTextOnWindow(windowId, sStringVar5, nonHPStatX, 52, 0, 0);
 }
 
 static void PrintExpPointsNextLevel(void)
@@ -4675,7 +4707,7 @@ static void ShowGradeIcons(u8 mode)
             else
                 y = 42 + (i - (SPRITE_ARR_ID_HP_GRADE + 1)) * 12;
 
-            sMonSummaryScreen->spriteIds[i] = CreateSprite(&sSpriteTemplate_StatGrades, 74, y, 0);
+            sMonSummaryScreen->spriteIds[i] = CreateSprite(&sSpriteTemplate_StatGrades, 114, y, 0);
 
         }
         gSprites[sMonSummaryScreen->spriteIds[i]].invisible = FALSE;
