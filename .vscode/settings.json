@@ -11,23 +11,6 @@
     ],
     "makefile.loggingLevel": "Debug",
     "makefile.extensionLog": ".vscode/extension.log",
-    "makefile.buildLog": "dryout.txt",
-    "files.associations": {
-        "ranges": "c",
-        "system_error": "c",
-        "array": "c",
-        "chrono": "c",
-        "compare": "c",
-        "functional": "c",
-        "istream": "c",
-        "ostream": "c",
-        "ratio": "c",
-        "tuple": "c",
-        "type_traits": "c",
-        "utility": "c",
-        "pokemon_summary_screen.h": "c",
-        "string": "c",
-        "string_view": "c"
-    }
-
+    "makefile.buildLog": ".vscode/dryout.log",
+    "makefile.preConfigureScript": ".vscode/preconfigure.sh"
 }
