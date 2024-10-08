@@ -1237,15 +1237,6 @@ static const struct SpriteTemplate sSpriteTemplate_MoveTypes =
     .callback = SpriteCallbackDummy
 };
 
-static const u8 sContestCategoryToOamPaletteNum[CONTEST_CATEGORIES_COUNT] =
-{
-    [CONTEST_CATEGORY_COOL] = 13,
-    [CONTEST_CATEGORY_BEAUTY] = 14,
-    [CONTEST_CATEGORY_CUTE] = 14,
-    [CONTEST_CATEGORY_SMART] = 15,
-    [CONTEST_CATEGORY_TOUGH] = 13,
-};
-
 static const union AnimCmd sSpriteAnim_TeraTypeNone[] = {
     ANIMCMD_FRAME(TYPE_NONE * 4, 0, FALSE, FALSE),
     ANIMCMD_END
@@ -2371,6 +2362,7 @@ static void Task_HandleInput(u8 taskId)
                     SwitchToMoveSelection(taskId);
                 }
             }
+            #if BW_SUMMARY_IV_EV_DISPLAY_CYCLE
             else
             {
                 if (BW_SUMMARY_IV_EV_DISPLAY != BW_IV_EV_HIDDEN)
@@ -2385,6 +2377,7 @@ static void Task_HandleInput(u8 taskId)
                         BufferAndPrintStats_HandleState(tSkillsState);
                 }
             }
+            #endif
         }
         else if (JOY_NEW(B_BUTTON))
         {

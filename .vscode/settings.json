@@ -3,5 +3,6 @@
     "makefile.loggingLevel": "Verbose",
     "makefile.extensionLog": ".vscode/extension.log",
     "makefile.buildLog": ".vscode/dryout.log",
-    "makefile.preConfigureScript": ".vscode/preconfigure.sh"
+    "makefile.preConfigureScript": ".vscode/preconfigure.sh",
+    "makefile.alwaysPreConfigure": true
 }
