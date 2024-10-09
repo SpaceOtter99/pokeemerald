@@ -3871,7 +3871,7 @@ static void PrintMonAbilityDescription(void)
     u8 abilityDesc [64] = {0};
     StringCopy(abilityDesc, gAbilitiesInfo[ability].description);
     replaceHalfwaySpaceWithNewline(abilityDesc);
-    PrintTextOnWindow_BW_Font(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_ABILITY, FALSE), abilityDesc, 4, 15, 0, 0);
+    PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_ABILITY, FALSE), abilityDesc, 4, 15, 0, 0, FONT_SMALL_NARROWER);
 }
 
 static void BufferMonTrainerMemo(void)
