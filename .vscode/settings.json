@@ -5,5 +5,5 @@
     "makefile.buildLog": ".vscode/dryout.log",
     "makefile.preConfigureScript": ".vscode/preconfigure.sh",
     "makefile.alwaysPreConfigure": true,
-    "C_Cpp.default.compilerPath": ""
+    "C_Cpp.errorSquiggles": "enabled"
 }

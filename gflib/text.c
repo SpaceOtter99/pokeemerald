@@ -272,6 +272,16 @@ static const struct FontInfo sFontInfos[] =
         .bgColor = 1,
         .shadowColor = 3,
     },
+    [FONT_BW_SUMMARY_SCREEN_NARROWER] = {
+        .fontFunction = FontFunc_SmallNarrower,
+        .maxLetterWidth = 5,
+        .maxLetterHeight = 12,
+        .letterSpacing = 0,
+        .lineSpacing = 0,
+        .fgColor = 2,
+        .bgColor = 1,
+        .shadowColor = 3,
+    },
 };
 
 static const u8 sMenuCursorDimensions[][2] =
@@ -290,6 +300,7 @@ static const u8 sMenuCursorDimensions[][2] =
     [FONT_SMALL_NARROWER] = { 8,   8 },
     [FONT_SHORT_NARROW]   = { 8,  14 },
     [FONT_BW_SUMMARY_SCREEN] = { 8,  14 },
+    [FONT_BW_SUMMARY_SCREEN_NARROWER] = { 8,  14 },
 };
 
 static const u16 sFontBoldJapaneseGlyphs[] = INCBIN_U16("graphics/fonts/bold.hwjpnfont");
@@ -1091,7 +1102,7 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             case CHAR_NEWLINE:
                 textPrinter->printerTemplate.currentX = textPrinter->printerTemplate.x;
                 textPrinter->printerTemplate.currentY += (gFonts[textPrinter->printerTemplate.fontId].maxLetterHeight + textPrinter->printerTemplate.lineSpacing);
-                if (subStruct->fontId == FONT_BW_SUMMARY_SCREEN)
+                if (subStruct->fontId == FONT_BW_SUMMARY_SCREEN || subStruct->fontId == FONT_BW_SUMMARY_SCREEN_NARROWER)
                     textPrinter->printerTemplate.currentY -= 2;
                 return RENDER_REPEAT;
             case PLACEHOLDER_BEGIN:
@@ -1274,6 +1285,7 @@ static u16 RenderText(struct TextPrinter *textPrinter)
                 DecompressGlyph_SmallNarrower(currChar, textPrinter->japanese);
                 break;
             case FONT_SHORT_NARROW:
+            case FONT_BW_SUMMARY_SCREEN_NARROWER:
                 DecompressGlyph_ShortNarrow(currChar, textPrinter->japanese);
                 break;
             case FONT_BRAILLE:

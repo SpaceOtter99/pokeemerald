@@ -47,6 +47,7 @@
 #include "constants/items.h"
 #include "constants/moves.h"
 #include "constants/party_menu.h"
+#include "constants/pokemon.h"
 #include "constants/region_map_sections.h"
 #include "constants/rgb.h"
 #include "constants/songs.h"
@@ -381,6 +382,25 @@ static const u8 sStatsHPLayout[]                            = _("{DYNAMIC 1}");
 static const u8 sStatsHPIVEVLayout[]                        = _("{DYNAMIC 0}");
 static const u8 sStatsNonHPLayout[]                         = _("{DYNAMIC 0}\n{DYNAMIC 1}\n{DYNAMIC 2}\n{DYNAMIC 3}\n{DYNAMIC 4}");
 static const u8 sMovesPPLayout[]                            = _("{PP}{CLEAR_TO 31}{DYNAMIC 0}/{DYNAMIC 1}");
+static const u8 sMovesEXPLayout[]                            = _("{COLOR_HIGHLIGHT_SHADOW 3 0 4}{FONT_SMALL}{DYNAMIC 0} / {DYNAMIC 1} ({DYNAMIC 2}{FONT_SMALL_NARROWER}{DYNAMIC 3})");
+static const u8 sGrowthRates[NUM_GROWTH_RATES][12] = {
+    [GROWTH_ERRATIC] = _("ERRATIC"),
+    [GROWTH_FAST] = _("FAST"),
+    [GROWTH_MEDIUM_FAST] = _("MID-FAST"),
+    [GROWTH_MEDIUM_SLOW] = _("MID-SLOW"),
+    [GROWTH_SLOW] = _("SLOW"),
+    [GROWTH_FLUCTUATING] = _("FLUCTUATES")
+};
+
+
+/*
+#define GROWTH_MEDIUM_FAST  0
+#define GROWTH_ERRATIC      1
+#define GROWTH_FLUCTUATING  2
+#define GROWTH_MEDIUM_SLOW  3
+#define GROWTH_FAST         4
+#define GROWTH_SLOW         5
+*/
 
 #if BW_SUMMARY_DECAP == TRUE
 static const u8 sText_Cancel[]                              = _("Cancel");
@@ -632,7 +652,7 @@ static const struct WindowTemplate sPageInfoTemplate[] =
     },
     [PSS_DATA_WINDOW_INFO_MEMO] = {
         .bg = 0,
-        .tilemapLeft = 2,
+        .tilemapLeft = 0,
         .tilemapTop = 13,
         .width = 26,
         .height = 7,
@@ -669,7 +689,7 @@ static const struct WindowTemplate sPageSkillsTemplate[] =
         .paletteNum = 6,
         .baseBlock = 355,
     },
-    [PSS_DATA_WINDOW_SKILLS_STATS_NON_HP] = {   //TODO
+    [PSS_DATA_WINDOW_SKILLS_STATS_NON_HP] = {  
         .bg = 0,
         .tilemapLeft = 8,
         .tilemapTop = 4,
@@ -3356,7 +3376,7 @@ static void OverrideHPBarPalette(void)
     }
 }
 
-#define EXP_BAR_TILEMAP_START 0x20 * 12 + 0x9
+#define EXP_BAR_TILEMAP_START 0x20 * 13 + 0x8
 #define EXP_BAR_TILE_EMPTY    0x2100
 #define EXP_BAR_TILE_FULL     0x2108
 
@@ -3462,8 +3482,13 @@ static void PrintNotEggInfo(void)
     //print gender
     PrintGenderSymbol(mon, summary->species2);
 
+    u8 sSmallText[] = _("{FONT_SMALL_NARROWER}");
+    u8 sNormalText[] = _("{FONT_SHORT}");
+
     // print level
-    StringCopy(gStringVar1, gText_LevelSymbol);
+    StringCopy(gStringVar1, sSmallText);
+    StringAppend(gStringVar1, gText_LevelSymbol);
+    StringAppend(gStringVar1, sNormalText);
     ConvertIntToDecimalStringN(gStringVar2, summary->level, STR_CONV_MODE_LEFT_ALIGN, 3);
     StringAppend(gStringVar1, gStringVar2);
 
@@ -3854,13 +3879,16 @@ static void PrintMonAbilityName(void)
 
 void replaceHalfwaySpaceWithNewline(u8 str[]) {
     u8 halfway = 15;
+    u8 found = 0;
 
     // Traverse the string starting from the halfway point
-    for (u8 i = halfway; i < 32; i++) {
-        if (str[i] == 0) {
-            DebugPrintf("%d: %x", i, str[i]);
-            str[i] = CHAR_NEWLINE;  // Replace the first space with a newline
-            break;  // Stop after the first replacement
+    for (u8 i = 0; i < 28; i++) {
+        u8 searchIndex = halfway + (i / 2) * (i % 2 ? 1 : -1);
+        DebugPrintf("%d/i%d: %d (%x)", searchIndex, i, str[i], str[i]);
+        if (str[searchIndex] == 0 && found == 0) {
+            DebugPrintf("%d: NEWLINE", searchIndex);
+            str[searchIndex] = CHAR_NEWLINE;  // Replace the first space with a newline
+            found = 1;  // Stop after the first replacement
         }
     }
 }
@@ -3932,7 +3960,7 @@ static void BufferMonTrainerMemo(void)
 
 static void PrintMonTrainerMemo(void)
 {
-    PrintTextOnWindow_BW_Font(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), gStringVar4, 16, 4, 0, 0);
+    PrintTextOnWindow_BW_Font(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), gStringVar4, 10, 4, 0, 0);
 }
 
 static void BufferNatureString(void)
@@ -4031,7 +4059,7 @@ static void PrintEggState(void)
     else
         text = gText_EggWillTakeALongTime;
 
-    PrintTextOnWindow_BW_Font(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), text, 16, 4, 0, 0);
+    PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), text, 8, 4, 0, 0,FONT_BW_SUMMARY_SCREEN_NARROWER);
 }
 
 static void PrintEggMemo(void)
@@ -4055,7 +4083,7 @@ static void PrintEggMemo(void)
         text = gText_OddEggFoundByCouple;
     }
 
-    PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), text, 16, 28, 0, 0);
+    PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), text, 16, 28, 0, 0, FONT_BW_SUMMARY_SCREEN_NARROWER);
 }
 
 static void PrintSkillsPageText(void)
@@ -4165,6 +4193,8 @@ static void BufferStat(u8 *dst, s8 statIndex, u32 stat, u32 strId, u32 align)
     static const u8 sTextNothing[] = _("{FONT_NARROWER}{NO_ARROW}{RESET_FONT}{FONT_SHORT}");
     u8 *txtPtr;
 
+    u8 match = (gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown) ? 1 : 0;
+
     if (statIndex == 0 
         || !BW_SUMMARY_NATURE_COLORS 
         || gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown)
@@ -4177,12 +4207,11 @@ static void BufferStat(u8 *dst, s8 statIndex, u32 stat, u32 strId, u32 align)
         txtPtr = StringCopy(dst, sTextNatureNeutral);
 
     if (statIndex != 0 
-        && BW_SUMMARY_NATURE_ARROWS 
-        && gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp != gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown)
+        && BW_SUMMARY_NATURE_ARROWS )
     {
-        if (statIndex == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp)
+        if (!match && statIndex == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statUp)
             txtPtr = StringCopy(dst, sTextUpArrow);
-        else if (statIndex == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown)
+        else if (!match && statIndex == gNaturesInfo[sMonSummaryScreen->summary.mintNature].statDown)
             txtPtr = StringCopy(dst, sTextDownArrow);
         else if (statIndex == NUM_STATS)
             txtPtr = StringCopy(dst, sTextEVs);
@@ -4340,29 +4369,61 @@ static void BufferAndPrintEVs(void)
     PrintTextOnWindow(windowId, sStringVar5, nonHPStatX, 52, 0, 0);
 }
 
+static u32 numPlaces (u32 n) {
+    if (n < 10) return 1;
+    if (n < 100) return 2;
+    if (n < 1000) return 3;
+    if (n < 10000) return 4;
+    if (n < 100000) return 5;
+    if (n < 1000000) return 6;
+    if (n < 10000000) return 7;
+    if (n < 100000000) return 8;
+    if (n < 1000000000) return 9;
+    return 10;
+}
+
 static void PrintExpPointsNextLevel(void)
 {
-    u8 tExpBar[] = _("{COLOR_HIGHLIGHT_SHADOW 3 0 4}{FONT_SMALL_NARROWER}");
-    u32 expToNextLevel;
     struct PokeSummary *sum = &sMonSummaryScreen->summary;
+    u8 growthRate = gSpeciesInfo[sum->species].growthRate;
+    u32 exp, expToNextLevel, nextLevelAt, prevLevelAt;
     //u8 windowIdExp = AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_EXP, FALSE);
     u8 windowIdNextLvl = AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_STATS_NON_HP, TRUE);
 
-    // print exp
-    ConvertIntToDecimalStringN(gStringVar1, sum->exp, STR_CONV_MODE_RIGHT_ALIGN, 7);
     //PrintTextOnWindow(windowIdExp, gStringVar1, 45, 4, 0, 0);
 
-    // print exp to next level
+    // print exp stuff
+    prevLevelAt = gExperienceTables[growthRate][sum->level];
+    exp = sum->exp - prevLevelAt;
+
     if (sum->level < MAX_LEVEL)
-        expToNextLevel = gExperienceTables[gSpeciesInfo[sum->species].growthRate][sum->level + 1] - sum->exp;
+    {
+        nextLevelAt = gExperienceTables[growthRate][sum->level + 1] - prevLevelAt;
+        expToNextLevel = nextLevelAt - exp;
+    }
     else
+    {
+        nextLevelAt = prevLevelAt - gExperienceTables[growthRate][sum->level - 1];
+        exp = nextLevelAt;
         expToNextLevel = 0;
-    
-    StringCopy(gStringVar1, tExpBar);
-    StringAppend(gStringVar1, sText_NextLv);
-    ConvertIntToDecimalStringN(gStringVar2, expToNextLevel, STR_CONV_MODE_RIGHT_ALIGN, 6);
-    StringAppend(gStringVar1, gStringVar2);
-    PrintTextOnWindowWithFont(windowIdNextLvl, gStringVar1, 72, 62, 0, 0, FONT_SMALL_NARROWER);
+    }
+
+    u8 sTextNone[] = _("");
+    u8 sTextComma[] = _(", ");
+
+    // print exp
+    ConvertIntToDecimalStringN(gStringVar2, exp, STR_CONV_MODE_RIGHT_ALIGN, numPlaces(exp));
+    ConvertIntToDecimalStringN(gStringVar3, nextLevelAt, STR_CONV_MODE_RIGHT_ALIGN, numPlaces(nextLevelAt));
+    ConvertIntToDecimalStringN(gStringVar4, expToNextLevel, STR_CONV_MODE_RIGHT_ALIGN, numPlaces(expToNextLevel));
+    StringAppend(gStringVar4, sTextComma);
+
+    DynamicPlaceholderTextUtil_Reset();
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(0, gStringVar2);
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(1, gStringVar3);
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(2, gStringVar4);
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(3, sGrowthRates[growthRate]);
+    DynamicPlaceholderTextUtil_ExpandPlaceholders(gStringVar1, sMovesEXPLayout);
+    PrintTextOnWindow(windowIdNextLvl, gStringVar1, 2, 63, 0, 0);
 }
 
 static void PrintBattleMoves(void)
@@ -4829,9 +4890,10 @@ static void TrySetInfoPageIcons(void)
     if (sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
     { 
         SetPokerusCuredSprite();
-        if (BW_SUMMARY_SHOW_FRIENDSHIP)
-            SetFriendshipSprite();
     }
+
+    if (BW_SUMMARY_SHOW_FRIENDSHIP)
+        SetFriendshipSprite();
 }
 
 static void CreateMoveTypeIcons(void)
@@ -5035,6 +5097,7 @@ static u8 CreateMonSprite(struct Pokemon *unused, bool32 isShadow)
         gSprites[spriteId].oam.objMode = ST_OAM_OBJ_BLEND;
         gSprites[spriteId].x -= 5;
         gSprites[spriteId].y -= 2;
+        gSprites[spriteId].oam.priority = 3;
     }
 
     return spriteId;
@@ -5150,7 +5213,7 @@ static void SetFriendshipSprite(void)
     u8 level = FRIENDSHIP_LEVEL_0;
     
     if (sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_FRIENDSHIP] == SPRITE_NONE)
-        sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_FRIENDSHIP] = CreateSprite(&sSpriteTemplate_FriendshipIcon, 153, 25, 0);
+        sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_FRIENDSHIP] = CreateSprite(&sSpriteTemplate_FriendshipIcon, 195, 37, 0);
 
     gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_FRIENDSHIP]].invisible = FALSE;
     
