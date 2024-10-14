@@ -4,6 +4,11 @@
 #define GET_R(color) ((color) & 0x1F)
 #define GET_G(color) (((color) >> 5) & 0x1F)
 #define GET_B(color) (((color) >> 10) & 0x1F)
+// Gets the max value of R, G and B (equal to HSV Value)
+#define GET_RGB_MAX(color) max(GET_R(color), max(GET_G(color), GET_B(color)))
+#define GET_RGB_MIN(color) min(GET_R(color), max(GET_G(color), GET_B(color)))
+#define GET_V(color) GET_RGB_MAX(color)
+#define GET_S(color) ((255 * (GET_RGB_MAX(color) - GET_RGB_MIN(color))) / GET_V(color))
 
 #define RGB(r, g, b)  ((r) | ((g) << 5) | ((b) << 10))
 #define RGB2(r, g, b) (((b) << 10) | ((g) << 5) | (r))

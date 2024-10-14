@@ -54,6 +54,7 @@
 #include "constants/items.h"
 #include "constants/layouts.h"
 #include "constants/moves.h"
+#include "constants/rgb.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
 #include "constants/union_room.h"
@@ -86,6 +87,7 @@ EWRAM_DATA struct SpriteTemplate gMultiuseSpriteTemplate = {0};
 EWRAM_DATA static struct MonSpritesGfxManager *sMonSpritesGfxManagers[MON_SPR_GFX_MANAGERS_COUNT] = {NULL};
 EWRAM_DATA static u8 sTriedEvolving = 0;
 EWRAM_DATA u16 gFollowerSteps = 0;
+EWRAM_DATA u16 gMonDataSpeciesOrEggHatchSpecies = 0;
 
 #include "data/moves_info.h"
 #include "data/abilities.h"
@@ -2681,7 +2683,10 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
         case MON_DATA_SPECIES_OR_EGG:
             retVal = substruct0->species;
             if (substruct0->species && (substruct3->isEgg || boxMon->isBadEgg))
+            {
+                gMonDataSpeciesOrEggHatchSpecies = retVal;
                 retVal = SPECIES_EGG;
+            }
             break;
         case MON_DATA_IVS:
             retVal = substruct3->hpIV
@@ -4945,6 +4950,147 @@ u16 HoennToNationalOrder(u16 hoennNum)
         return 0;
 
     return sHoennToNationalOrder[hoennNum - 1];
+}
+
+u8 GET_H(u16 color)
+{
+    u8 r, g, b;
+    r = GET_R(color);
+    g = GET_G(color);
+    b = GET_B(color);
+    u8 h;
+    u8 rgbMin, rgbMax;
+
+    rgbMin = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    rgbMax = r > g ? (r > b ? r : b) : (g > b ? g : b);
+
+    if (rgbMax == r)
+        h = 0 + 43 * (g - b) / (rgbMax - rgbMin);
+    else if (rgbMax == g)
+        h = 85 + 43 * (b - r) / (rgbMax - rgbMin);
+    else
+        h = 171 + 43 * (r - g) / (rgbMax - rgbMin);
+
+    return h;
+}
+
+#define ABSDIFF(a, b) (a > b ? a - b : b - a)
+#define ABSDIFF_H(a, b) (min(ABSDIFF(a,b), ABSDIFF(a + 128, b + 128)))
+
+#include "palette.h"
+
+/* Overrides the egg colour palette by trying to get the most interesting set of colours 
+   from the hatched mon's sprite */
+void GetNewEggColourPalette(const u32 *compressedPal)
+{
+    u16 species = gMonDataSpeciesOrEggHatchSpecies;
+    u8 primary, primaryDark, primaryLight, secondary, secondaryDark;
+    u16 pixelCounts[16] = {0};
+    u8 monSprite[64 * 64 * 16];
+    u16 palette[sizeof(u16) * 16];
+    u8 h[16], s[16], v[16];
+    LZ77UnCompWram(gSpeciesInfo[species].frontPic, monSprite);
+    LZ77UnCompWram(compressedPal, palette);
+    for (u8 x = 0; x < 64; x++)
+    {
+        for (u8 y = 0; y < 32; y++)
+        {
+            pixelCounts[monSprite[x*64 + y] & 0x0F]++;
+            pixelCounts[(monSprite[x*64 + y] & 0xF0) >> 4]++;
+        }
+    }
+
+    // Find the most common non-transparent colour & set up some vars for later
+    primary = 1;
+    h[0] = 255;
+    s[0] = 255;
+    v[0] = 255;
+    for (u8 i = 1; i < 16; i++)
+    {
+        if (pixelCounts[i] > pixelCounts[primary])
+            primary = i;
+
+        h[i] = GET_H(palette[i]);
+        s[i] = GET_S(palette[i]);
+        v[i] = GET_V(palette[i]);
+    }
+
+    // Find the most similar colors hue-wise that are lighter & darker for the egg highlight & shadow
+    // Find the most different colors hue-wise and sort them for the egg spots
+    primaryDark = 0; primaryLight = 0;
+    secondary = 0;
+    u8 hdiffDark = 255, hdiffLight = 255;
+    u8 diffSec = 0;
+    for (u8 i = 1; i < 16; i++)
+    {
+        if (i == primary)
+            continue;
+        u8 diffH = ABSDIFF_H(h[primary], h[i]);
+        u8 diffV = ABSDIFF(v[primary], v[i]);
+        u8 diffS = ABSDIFF(s[primary], s[i]);
+
+        // Primary (egg shell) colors
+        if (diffH < hdiffLight && v[i] > v[primary])
+        {
+            hdiffLight = diffH;
+            primaryLight = i;
+        }
+        if (diffH < hdiffDark && v[i] < v[primary])
+        {
+            hdiffDark = diffH;
+            primaryDark = i;
+        }
+
+        // Secondary (egg spot) color.
+        if (diffH> diffSec && pixelCounts[i] >= (pixelCounts[primary] / 8) && ABSDIFF(v[i], v[primary]) < 16)
+        {
+            diffSec = diffH;
+            secondary = i;
+        }
+    }
+
+    // Finally, get the spot colour's closest match
+    // Or realise that there's only bad matches and give up
+    secondaryDark = 0;
+    if (secondary != 0)
+    {
+        u8 diffSec = 255;
+        for (u8 i = 1; i < 16; i++)
+        {
+            if (i == secondary)
+                continue;
+            u8 diffH = ABSDIFF_H(h[secondary], h[i]);
+
+            if (diffH < diffSec)
+            {
+                diffSec = diffH;
+                secondaryDark = i;
+            }
+        }
+        if (v[secondary] < v[secondaryDark])
+        {
+            u8 tmp = secondary;
+            secondary = secondaryDark;
+            secondaryDark = tmp;
+        }
+    }
+    if (secondaryDark == 0 || secondary == 0) 
+    {
+        // Oops, no good matches! Plain coloured egg.
+        secondary = primary;
+        secondaryDark = primaryDark;
+    }
+
+    u16 newPal[] = {
+        palette[primaryLight], 
+        palette[primary], 
+        palette[primaryDark], 
+        palette[secondary], 
+        palette[secondaryDark]};
+
+    u8 index = IndexOfSpritePaletteTag(SPECIES_EGG);
+    DebugPrintf("%x", index);
+    LoadPalette(newPal, OBJ_PLTT_OFFSET + (0x10 * index) + 3, sizeof(u16) * 5);
 }
 
 // Spots can be drawn on Spinda's color indexes 1, 2, or 3

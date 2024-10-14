@@ -4052,8 +4052,12 @@ static u8 LoadMonGfxAndSprite(struct Pokemon *mon, s16 *state)
         }
         (*state)++;
         return 0xFF;
-    case 1:
+    case 1:  
         LoadCompressedSpritePaletteWithTag(GetMonSpritePalFromSpeciesAndPersonality(summary->species2, summary->isShiny, summary->pid), summary->species2);
+        if (summary -> species2 == SPECIES_EGG)
+        {
+            GetNewEggColourPalette(GetMonSpritePalFromSpeciesAndPersonality(summary->species, summary->isShiny, summary->pid));
+        }
         SetMultiuseSpriteTemplateToPokemon(summary->species2, B_POSITION_OPPONENT_LEFT);
         (*state)++;
         return 0xFF;

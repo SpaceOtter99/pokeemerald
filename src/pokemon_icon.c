@@ -221,7 +221,7 @@ void LoadMonIconPalettes(void)
 {
     u8 i;
     for (i = 0; i < ARRAY_COUNT(gMonIconPaletteTable); i++)
-        LoadSpritePalette(&gMonIconPaletteTable[i]);
+        LoadSpritePalette(&gMonIconPaletteTable[i]); //TODO
 }
 
 // unused

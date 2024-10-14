@@ -4135,6 +4135,9 @@ static void CreatePartyMonIconSprite(struct Pokemon *mon, struct PartyMenuBox *m
 
     species2 = GetMonData(mon, MON_DATA_SPECIES_OR_EGG);
     CreatePartyMonIconSpriteParameterized(species2, GetMonData(mon, MON_DATA_PERSONALITY), menuBox, 1);
+
+    //TODO: Party Eggs
+
     UpdatePartyMonHPBar(menuBox->monSpriteId, mon);
 }
 
