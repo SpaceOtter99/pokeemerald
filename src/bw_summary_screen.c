@@ -7,6 +7,7 @@
 #include "battle_tent.h"
 #include "battle_factory.h"
 #include "bg.h"
+#include "blit.h"
 #include "bw_summary_screen.h"
 #include "contest.h"
 #include "contest_effect.h"
@@ -19,6 +20,7 @@
 #include "graphics.h"
 #include "international_string_util.h"
 #include "item.h"
+#include "item_icon.h"
 #include "link.h"
 #include "m4a.h"
 #include "malloc.h"
@@ -133,6 +135,7 @@ enum BWSummarySprites
     SPRITE_ARR_ID_MON,
     SPRITE_ARR_ID_SHADOW,
     SPRITE_ARR_ID_BALL,
+    SPRITE_ARR_ID_ITEM,
     SPRITE_ARR_ID_STATUS,
     SPRITE_ARR_ID_SHINY,
     SPRITE_ARR_ID_POKERUS_CURED,
@@ -296,6 +299,8 @@ static void PrintMonOTName(void);
 static void PrintMonOTID(void);
 static void PrintMonDexNumberSpecies(void);
 static void PrintMonAbilityName(void);
+static void CreateMonItemSprite(void);
+static void DestroyMonItemSprite(void);
 static void PrintMonAbilityDescription(void);
 static void BufferMonTrainerMemo(void);
 static void PrintMonTrainerMemo(void);
@@ -447,6 +452,8 @@ const u32 sSummaryPage_ContestMoves_Tilemap_BW[]            = INCBIN_U32("graphi
 const u32 sSummaryEffect_Battle_Tilemap_BW[]                = INCBIN_U32("graphics/summary_screen/bw/effect_battle.bin.lz");
 const u32 sSummaryEffect_Contest_Tilemap_BW[]               = INCBIN_U32("graphics/summary_screen/bw/effect_contest.bin.lz");
 const u16 sSummaryScreen_PPTextPalette_BW[]                 = INCBIN_U16("graphics/summary_screen/bw/text_pp.gbapal");
+const u32 sSummaryScreen_Ribbons_Gfx[]                      = INCBIN_U8("graphics/summary_screen/bw/ribbons.4bpp");
+const u32 sSummaryScreen_Ribbons_Pal[]                      = INCBIN_U8("graphics/summary_screen/bw/ribbons.gbapal");
 
 // sprite gfx
 static const u8 sButtons_Gfx[][4 * TILE_SIZE_4BPP] = {
@@ -654,7 +661,7 @@ static const struct WindowTemplate sPageInfoTemplate[] =
         .bg = 0,
         .tilemapLeft = 0,
         .tilemapTop = 13,
-        .width = 26,
+        .width = 30,
         .height = 7,
         .paletteNum = 6,
         .baseBlock = 407,
@@ -666,7 +673,7 @@ static const struct WindowTemplate sPageInfoTemplate[] =
         .width = 9,
         .height = 4,
         .paletteNum = 6,
-        .baseBlock = 589,
+        .baseBlock = 815,
     },
 };
 static const struct WindowTemplate sPageSkillsTemplate[] =
@@ -773,6 +780,7 @@ static void (*const sTextPrinterTasks[])(u8 taskId) =
 #define TAG_FRIENDSHIP_ICON 30008
 #define TAG_TERA_TYPE 30009
 #define TAG_MON_SHADOW 30010
+#define TAG_ITEM_ICON 30011
 
 enum BWCategoryIcon
 {
@@ -1862,6 +1870,7 @@ static bool8 LoadGraphics(void)
         gMain.state++;
         break;
     case 16:
+        CreateMonItemSprite();
         sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON] = LoadMonGfxAndSprite(&sMonSummaryScreen->currentMon, &sMonSummaryScreen->switchCounter, FALSE);
         if (BW_SUMMARY_MON_SHADOWS)
             sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_SHADOW] = LoadMonGfxAndSprite(&sMonSummaryScreen->currentMon, &sMonSummaryScreen->switchCounter, TRUE);
@@ -2517,6 +2526,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
         data[1] = 0;
         break;
     case 9:
+        DestroyMonItemSprite();
         SetTypeIcons();
         TrySetInfoPageIcons();
         break;
@@ -2540,6 +2550,10 @@ static void Task_ChangeSummaryMon(u8 taskId)
             else if (BW_SUMMARY_IV_EV_DISPLAY == BW_IV_EV_GRADED)
                 DrawNextSkillsButtonPrompt(SKILL_STATE_IVS);
             #endif
+        }
+        if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS || sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
+        {
+            CreateMonItemSprite();
         }
         break;
     case 12:
@@ -2626,6 +2640,7 @@ static bool8 IsValidToViewInMulti(struct Pokemon *mon)
 
 static void ChangePage(u8 taskId, s8 delta)
 {
+    DestroyMonItemSprite();
     struct PokeSummary *summary = &sMonSummaryScreen->summary;
     s16 *data = gTasks[taskId].data;
 
@@ -2719,6 +2734,11 @@ static void PssScrollEnd(u8 taskId)
         if (sMonSummaryScreen->markingsSprite != NULL)
            sMonSummaryScreen->markingsSprite->invisible = FALSE; 
     } 
+
+    if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS || sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
+    {
+        CreateMonItemSprite();
+    }
 
     SwitchTaskToFollowupFunc(taskId);
 }
@@ -3871,10 +3891,72 @@ static void PrintMonOTID(void)
     }
 }
 
+static void BlitRibbons(void)
+{
+
+}
+
+#define RIBBON_CONTEST_COLOUR_ID 7
+
+/*
+ribbonTile = how far down the png is it
+ribbonTytpe = Cool, Beauty, Smart etc. (CONTEST_CATEGORY_COOL onwards)
+*/
+static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType)
+{
+    // TODO: Load ribbon palette
+    u8 palOffset = 0;
+    u16 ribbonPixels[16]; //16x16 ribbon
+
+    if (ribbonType < CONTEST_CATEGORIES_COUNT)
+        palOffset = ribbonType;
+
+    for (u8 curPixelIndex = 0; curPixelIndex < 16*16; curPixelIndex++)
+    {
+        u8 curRow = curPixelIndex / 16;
+        u8 dstCol = curPixelIndex % 16;
+        u8 srcCol = dstCol > 7 ? 15 - dstCol : dstCol;
+        u8 curPixel = sSummaryScreen_Ribbons_Gfx[(curRow * 8) + srcCol];
+
+        if (curPixel == RIBBON_CONTEST_COLOUR_ID)
+            curPixel += palOffset;
+        
+        ribbonPixels[curRow] = curPixel;
+    }
+
+    //TODO: Put the new ribbon pixels somewhere (maybe blit them, for example)
+
+
+    BlitBitmapToWindow(
+        PSS_DATA_WINDOW_INFO_OT_OTID_ITEM,
+
+    )
+}
+
 static void PrintMonAbilityName(void)
 {
     u16 ability = GetAbilityBySpecies(sMonSummaryScreen->summary.species, sMonSummaryScreen->summary.abilityNum);
     PrintTextOnWindow(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_ABILITY, FALSE), gAbilitiesInfo[ability].name, 4, 2, 0, 0);
+}
+
+static void CreateMonItemSprite(void)
+{
+    if (sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_ITEM] != SPRITE_NONE)
+        return;
+    u16 item = sMonSummaryScreen->summary.item;
+    if (item != ITEM_NONE)
+    {
+        u8 itemSprite = AddItemIconSprite(TAG_ITEM_ICON, TAG_ITEM_ICON, item);
+        sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_ITEM] = itemSprite;
+        gSprites[itemSprite].x = 140;
+        gSprites[itemSprite].y = 134;
+    }
+}
+
+static void DestroyMonItemSprite(void)
+{
+    DestroySpriteAndFreeResources(&gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_ITEM]]);
+    sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_ITEM] = SPRITE_NONE;
 }
 
 void replaceHalfwaySpaceWithNewline(u8 str[]) {
@@ -4131,6 +4213,9 @@ static void Task_PrintSkillsPage(u8 taskId)
         BufferAndPrintEVs();
         break;
     case 9:
+        PrintHeldItemName();
+        break;
+    case 10:
         DestroyTask(taskId);
         return;
     }
@@ -4139,7 +4224,7 @@ static void Task_PrintSkillsPage(u8 taskId)
 
 static void PrintHeldItemName(void)
 {
-    const u8 *text;
+    const u8 *text, *desc;
     u32 fontId;
 
     if (sMonSummaryScreen->summary.item == ITEM_ENIGMA_BERRY_E_READER
@@ -4147,19 +4232,33 @@ static void PrintHeldItemName(void)
         && (sMonSummaryScreen->curMonIndex == 1 || sMonSummaryScreen->curMonIndex == 4 || sMonSummaryScreen->curMonIndex == 5))
     {
         text = ItemId_GetName(ITEM_ENIGMA_BERRY_E_READER);
+        desc = ItemId_GetDescription(ITEM_ENIGMA_BERRY_E_READER);
     }
     else if (sMonSummaryScreen->summary.item == ITEM_NONE)
     {
-        text = sText_None;
+        static const u8 sNoHeldItem[] = _("No Held Item");
+        static const u8 sEmpty[] = _("");
+        //text = sText_None;
+        text = sNoHeldItem;
+        desc = sEmpty;
     }
     else
     {
         CopyItemName(sMonSummaryScreen->summary.item, gStringVar1);
         text = gStringVar1;
+        desc = ItemId_GetDescription(sMonSummaryScreen->summary.item);
     }
 
-    fontId = GetFontIdToFit(text, FONT_SHORT, 0, WindowTemplateWidthPx(&sPageSkillsTemplate[PSS_DATA_WINDOW_INFO_OT_OTID_ITEM]) - 8);
-    PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), text, 12, 28, 0, 0, fontId);
+    if (sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
+    {
+        PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), text, 156, 10, 0, 0, FONT_SHORT_NARROW);
+        PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO, FALSE), desc, 156, 22, 0, 0, FONT_SMALL_NARROWER);
+    }
+    if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS)
+    {
+        PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_ABILITY, FALSE), text, 132, 2, 0, 0, FONT_SHORT_NARROW);
+        PrintTextOnWindowWithFont(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_ABILITY, FALSE), desc, 132, 14, 0, 0, FONT_SMALL_NARROWER);
+    }
 }
 
 static void UNUSED PrintRibbonCount(void)

@@ -305,6 +305,22 @@ enum {
     POKENAV_FADE_FROM_BLACK_ALL,
 };
 
+// Below correspond to a ribbon icon in ribbons/icons.png and ribbons/icons_big.png; 0 at top, 11 at bottom
+enum {
+    RIBBONGFX_CHAMPION,
+    RIBBONGFX_CONTEST_NORMAL,
+    RIBBONGFX_CONTEST_SUPER,
+    RIBBONGFX_CONTEST_HYPER,
+    RIBBONGFX_CONTEST_MASTER,
+    RIBBONGFX_WINNING,
+    RIBBONGFX_VICTORY,
+    RIBBONGFX_ARTIST,
+    RIBBONGFX_EFFORT,
+    RIBBONGFX_GIFT_1,
+    RIBBONGFX_GIFT_2,
+    RIBBONGFX_GIFT_3,
+};
+
 // pokenav.c
 void SetSelectedConditionSearch(u32);
 u32 GetSelectedConditionSearch(void);
