@@ -3979,6 +3979,7 @@ static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
 
     u8 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_RIBBONS, FALSE);
 
+    //TODO: Fix OT & ID on same line, then make ribbon sprite blit properly
     //TODO: Put the new ribbon pixels somewhere (maybe blit them, for example)
     DebugPrintf("Blitting to %d, %d", x, y);
     BlitBitmapToWindow(
