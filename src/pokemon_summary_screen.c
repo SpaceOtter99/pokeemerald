@@ -262,7 +262,7 @@ static void PrintPageSpecificText(u8);
 static void CreateTextPrinterTask(u8);
 static void PrintInfoPageText(void);
 static void Task_PrintInfoPage(u8);
-static void PrintMonOTName(void);
+static void PrintMonOTNameID(void);
 static void PrintMonOTID(void);
 static void PrintMonAbilityName(void);
 static void PrintMonAbilityDescription(void);
@@ -3122,7 +3122,7 @@ static void PrintInfoPageText(void)
     }
     else
     {
-        PrintMonOTName();
+        PrintMonOTNameID();
         PrintMonOTID();
         PrintMonAbilityName();
         PrintMonAbilityDescription();
@@ -3137,7 +3137,7 @@ static void Task_PrintInfoPage(u8 taskId)
     switch (data[0])
     {
     case 1:
-        PrintMonOTName();
+        PrintMonOTNameID();
         break;
     case 2:
         PrintMonOTID();
@@ -3161,7 +3161,7 @@ static void Task_PrintInfoPage(u8 taskId)
     data[0]++;
 }
 
-static void PrintMonOTName(void)
+static void PrintMonOTNameID(void)
 {
     int x, windowId;
     if (InBattleFactory() != TRUE && InSlateportBattleTent() != TRUE)

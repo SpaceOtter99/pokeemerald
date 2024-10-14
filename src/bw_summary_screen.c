@@ -34,6 +34,7 @@
 #include "pokemon_sprite_visualizer.h"
 #include "pokemon_storage_system.h"
 #include "pokemon_summary_screen.h"
+#include "pokenav.h"
 #include "region_map.h"
 #include "scanline_effect.h"
 #include "sound.h"
@@ -114,6 +115,7 @@ enum BWSkillsPageState
 #define PSS_DATA_WINDOW_INFO_OT_OTID_ITEM 0
 #define PSS_DATA_WINDOW_INFO_MEMO 1
 #define PSS_DATA_WINDOW_INFO_DEX_NUMBER_NAME 2
+#define PSS_DATA_WINDOW_INFO_RIBBONS 3
 
 // Dynamic fields for the Pokémon Skills page
 #define PSS_DATA_WINDOW_SKILLS_RIBBON_COUNT 0 //ravetodo handle ribbons
@@ -295,8 +297,9 @@ static void PrintPageSpecificText(u8);
 static void CreateTextPrinterTask(u8);
 static void PrintInfoPageText(void);
 static void Task_PrintInfoPage(u8);
-static void PrintMonOTName(void);
-static void PrintMonOTID(void);
+static void PrintMonOTNameID(void);
+static void BlitRibbons(void);
+static void BlitRibbonSingle(u8, u8, u16, u16);
 static void PrintMonDexNumberSpecies(void);
 static void PrintMonAbilityName(void);
 static void CreateMonItemSprite(void);
@@ -653,7 +656,7 @@ static const struct WindowTemplate sPageInfoTemplate[] =
         .tilemapLeft = 7,
         .tilemapTop = 7,
         .width = 12,
-        .height = 6,
+        .height = 2,
         .paletteNum = 6,
         .baseBlock = 335,
     },
@@ -675,6 +678,15 @@ static const struct WindowTemplate sPageInfoTemplate[] =
         .paletteNum = 6,
         .baseBlock = 815,
     },
+    [PSS_DATA_WINDOW_INFO_RIBBONS] = {
+        .bg = 0,
+        .tilemapLeft = 7,
+        .tilemapTop = 9,
+        .width = 12,
+        .height = 4,
+        .paletteNum = 6,
+        .baseBlock = 359,
+    }
 };
 static const struct WindowTemplate sPageSkillsTemplate[] =
 {
@@ -3772,8 +3784,7 @@ static void PrintInfoPageText(void)
     }
     else
     {
-        PrintMonOTName();
-        PrintMonOTID();
+        PrintMonOTNameID();
         PrintMonDexNumberSpecies();
         PrintHeldItemName();
         BufferMonTrainerMemo();
@@ -3787,10 +3798,10 @@ static void Task_PrintInfoPage(u8 taskId)
     switch (data[0])
     {
     case 1:
-        PrintMonOTName();
+        PrintMonOTNameID();
         break;
     case 2:
-        PrintMonOTID();
+        BlitRibbons();
         break;
     case 3:
         PrintMonDexNumberSpecies();
@@ -3859,12 +3870,16 @@ static void HandleMonShinyIcon(bool8 isShiny)
         gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_SHINY]].invisible = !isShiny;
 }
 
-static void PrintMonOTName(void)
+static void PrintMonOTNameID(void)
 {
-    int windowId;
+    u8 windowId;
     if (InBattleFactory() != TRUE && InSlateportBattleTent() != TRUE)
     {
+        u8 tSpaceSlash[] = _(" / ");
         windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
+        ConvertIntToDecimalStringN(gStringVar2, (u16)sMonSummaryScreen->summary.OTID, STR_CONV_MODE_LEADING_ZEROS, 5);
+        StringAppend(gStringVar1, tSpaceSlash);
+        StringAppend(gStringVar1, gStringVar2);
         if (sMonSummaryScreen->summary.OTGender == 0)
             PrintTextOnWindow(windowId, sMonSummaryScreen->summary.OTName, 12, 4, 0, 5);
         else
@@ -3875,25 +3890,61 @@ static void PrintMonOTName(void)
         StringCopy(gStringVar1, sText_RentalPkmn);
         PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), gStringVar1, 12, 4, 0, 0);
     }
-}
-
-static void PrintMonOTID(void)
-{
-    if (InBattleFactory() != TRUE && InSlateportBattleTent() != TRUE)
-    {
-        ConvertIntToDecimalStringN(gStringVar1, (u16)sMonSummaryScreen->summary.OTID, STR_CONV_MODE_LEADING_ZEROS, 5);
-        PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), gStringVar1, 12, 16, 0, 0);
-    }
-    else
-    {
-        StringCopy(gStringVar1, gText_FiveMarks);
-        PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), gStringVar1, 12, 16, 0, 0);
-    }
+    BlitRibbons();
 }
 
 static void BlitRibbons(void)
 {
-
+    /*
+    retVal = substruct3->championRibbon
+    | (substruct3->coolRibbon << 1)
+    | (substruct3->beautyRibbon << 4)
+    | (substruct3->cuteRibbon << 7)
+    | (substruct3->smartRibbon << 10)
+    | (substruct3->toughRibbon << 13)
+    | (substruct3->winningRibbon << 16)
+    | (substruct3->victoryRibbon << 17)
+    | (substruct3->artistRibbon << 18)
+    | (substruct3->effortRibbon << 19)
+    | (substruct3->marineRibbon << 20)
+    | (substruct3->landRibbon << 21)
+    | (substruct3->skyRibbon << 22)
+    | (substruct3->countryRibbon << 23)
+    | (substruct3->nationalRibbon << 24)
+    | (substruct3->earthRibbon << 25)
+    | (substruct3->worldRibbon << 26);
+    */
+    u32 ribbons = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_RIBBONS);
+    u32 numRibbonsPrinted = 0;
+    if (ribbons & 0x1)
+    {
+        // Champion Ribbon
+        numRibbonsPrinted++;
+        BlitRibbonSingle(sRibbonGfxData[CHAMPION_RIBBON].tileNumOffset, CONTEST_CATEGORIES_COUNT, 0, 0);
+    }
+    ribbons >>= 1;
+    for (u8 contest = 0; contest < CONTEST_CATEGORIES_COUNT; contest++)
+    {
+        for (u8 c = 0; c < (ribbons & 0b111); c++)
+        {
+            DebugPrintf("Printing %d of %d", c+1, ribbons & 0b111);
+            BlitRibbonSingle(sRibbonGfxData[(contest * 4) + c].tileNumOffset, contest, (8*numRibbonsPrinted), numRibbonsPrinted);
+            numRibbonsPrinted++;
+        }
+        ribbons >>= 3;
+    }
+    u8 specialRibbonNum = 0;
+    while (ribbons != 0)
+    {
+        DebugPrintf("Printing %x", specialRibbonNum);
+        if (ribbons & 0b1)
+        {
+            BlitRibbonSingle(sRibbonGfxData[WINNING_RIBBON + specialRibbonNum].tileNumOffset, CONTEST_CATEGORIES_COUNT, (8*numRibbonsPrinted), numRibbonsPrinted);
+            numRibbonsPrinted++;            
+        }
+        specialRibbonNum++;
+        ribbons >>= 1;
+    }
 }
 
 #define RIBBON_CONTEST_COLOUR_ID 7
@@ -3902,18 +3953,20 @@ static void BlitRibbons(void)
 ribbonTile = how far down the png is it
 ribbonTytpe = Cool, Beauty, Smart etc. (CONTEST_CATEGORY_COOL onwards)
 */
-static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType)
+static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
 {
     // TODO: Load ribbon palette
     u8 palOffset = 0;
-    u16 ribbonPixels[16]; //16x16 ribbon
+    u8 ribbonPixels[32]; //16x16 ribbon = 256 bits = 32 bytes
 
     if (ribbonType < CONTEST_CATEGORIES_COUNT)
         palOffset = ribbonType;
 
-    for (u8 curPixelIndex = 0; curPixelIndex < 16*16; curPixelIndex++)
+    ribbonTile *= 16*8;
+
+    for (u16 curPixelIndex = 0; curPixelIndex < 16*16; curPixelIndex++)
     {
-        u8 curRow = curPixelIndex / 16;
+        u8 curRow = (curPixelIndex / 16) + (ribbonTile);
         u8 dstCol = curPixelIndex % 16;
         u8 srcCol = dstCol > 7 ? 15 - dstCol : dstCol;
         u8 curPixel = sSummaryScreen_Ribbons_Gfx[(curRow * 8) + srcCol];
@@ -3924,13 +3977,18 @@ static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType)
         ribbonPixels[curRow] = curPixel;
     }
 
+    u8 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_RIBBONS, FALSE);
+
     //TODO: Put the new ribbon pixels somewhere (maybe blit them, for example)
-
-
+    DebugPrintf("Blitting to %d, %d", x, y);
     BlitBitmapToWindow(
-        PSS_DATA_WINDOW_INFO_OT_OTID_ITEM,
-
-    )
+        windowId,
+        ribbonPixels,
+        x + 20,
+        y + 20,
+        16,
+        16
+    );
 }
 
 static void PrintMonAbilityName(void)
