@@ -299,7 +299,7 @@ static void PrintInfoPageText(void);
 static void Task_PrintInfoPage(u8);
 static void PrintMonOTNameID(void);
 static void BlitRibbons(void);
-static void BlitRibbonSingle(u8, u8, u16, u16);
+static void BlitRibbonSingle(u8, u8, u16, u16, u8);
 static void PrintMonDexNumberSpecies(void);
 static void PrintMonAbilityName(void);
 static void CreateMonItemSprite(void);
@@ -3902,19 +3902,18 @@ static void BlitRibbons(void)
     CopyWindowToVram(windowId, COPYWIN_FULL);
     u32 ribbons = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_RIBBONS);
     u32 numRibbonsPrinted = 0;
-    if (ribbons & 0x1)
-    {
-        // Champion Ribbon
-        numRibbonsPrinted++;
-        BlitRibbonSingle(sRibbonGfxData[CHAMPION_RIBBON].tileNumOffset, CONTEST_CATEGORIES_COUNT, 0, 0);
-    }
+
+    // Champion Ribbon
+    numRibbonsPrinted++;
+    BlitRibbonSingle(sRibbonGfxData[CHAMPION_RIBBON].tileNumOffset, CONTEST_CATEGORIES_COUNT, 0, 0, ribbons & 0x1);
     ribbons >>= 1;
+    
     for (u8 contest = 0; contest < CONTEST_CATEGORIES_COUNT; contest++)
     {
         for (u8 c = 0; c < (ribbons & 0b111); c++)
         {
-            DebugPrintf("Printing %d of %d", c+1, ribbons & 0b111);
-            BlitRibbonSingle(sRibbonGfxData[(contest * 4) + c].tileNumOffset, contest, (8*numRibbonsPrinted), numRibbonsPrinted);
+            DebugPrintf("Printing %d of %d [%d]", c+1, ribbons & 0b111, contest);
+            BlitRibbonSingle(sRibbonGfxData[1 + (contest * 4) + c].tileNumOffset, contest, (8*numRibbonsPrinted), 8 * (numRibbonsPrinted % 2), 1);
             numRibbonsPrinted++;
         }
         ribbons >>= 3;
@@ -3925,7 +3924,7 @@ static void BlitRibbons(void)
         DebugPrintf("Printing %x", specialRibbonNum);
         if (ribbons & 0b1)
         {
-            BlitRibbonSingle(sRibbonGfxData[WINNING_RIBBON + specialRibbonNum].tileNumOffset, CONTEST_CATEGORIES_COUNT, (8*numRibbonsPrinted), numRibbonsPrinted);
+            BlitRibbonSingle(sRibbonGfxData[WINNING_RIBBON + specialRibbonNum].tileNumOffset, CONTEST_CATEGORIES_COUNT, (8*numRibbonsPrinted), numRibbonsPrinted, 1);
             numRibbonsPrinted++;            
         }
         specialRibbonNum++;
@@ -3937,10 +3936,10 @@ static void BlitRibbons(void)
 #define TILESIZE 8*8/2
 
 /*
-ribbonTile = how far down the png is it
+ribbonTileOffset = how far down the png is it
 ribbonTytpe = Cool, Beauty, Smart etc. (CONTEST_CATEGORY_COOL onwards)
 */
-static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
+static void BlitRibbonSingle(u8 ribbonTileOffset, u8 ribbonType, u16 x, u16 y, u8 obtained)
 {
     u8 palOffset = 0;
     u8 ribbonPixels[TILESIZE*4]; 
@@ -3953,16 +3952,57 @@ static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
         u16 offset = (curTile * TILESIZE);
         for (u16 curPixelIndex = 0; curPixelIndex < TILESIZE; curPixelIndex++)
         {
+            u16 srcIndex = curPixelIndex + (ribbonTileOffset * TILESIZE * 2);
             if (curTile % 2 == 0)
-                ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[curPixelIndex + ((curTile / 2) * TILESIZE)];
+                ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[srcIndex + ((curTile / 2) * TILESIZE) ];
             else // Mirror the sprite
             {
-                ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[(3 - (curPixelIndex % 4) + ((curPixelIndex/4)*4)) + ((curTile / 2) * TILESIZE)];
+                ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[(3 - (srcIndex % 4) + ((srcIndex/4)*4)) + ((curTile / 2) * TILESIZE)];
                 ribbonPixels[curPixelIndex + offset] = (
                    (0b00001111 & ribbonPixels[curPixelIndex + offset]) << 4 |
                    (0b11110000 & ribbonPixels[curPixelIndex + offset]) >> 4
                 );
             }
+
+            if (!obtained)
+            {
+                for (u8 subPixelI = 0; subPixelI < 2; subPixelI++)
+                {
+                    u8 pix = (ribbonPixels[curPixelIndex + offset] & (0b00001111 << (subPixelI * 4))) >> (subPixelI * 4);
+                    switch (pix)
+                    {
+                        case 1:
+                        case 2:
+                            pix = 1;
+                            break;
+                        case 3:
+                        case 6:
+                        case 7:
+                        case 8:
+                        case 9:
+                        case 10:
+                        case 11:
+                            pix = 0;
+                            break;
+                        case 4:
+                            pix = 13;
+                            break;
+                        case 5:
+                            pix = 14;
+                            break;
+                    }
+                    ribbonPixels[curPixelIndex + offset] = (pix << (subPixelI * 4)) | (ribbonPixels[curPixelIndex + offset] & (0b00001111 << ((1-subPixelI) * 4)));
+                }
+            }
+            else
+            {
+                if ((ribbonPixels[curPixelIndex + offset] & 0b00001111) == RIBBON_CONTEST_COLOUR_ID)
+                    ribbonPixels[curPixelIndex + offset] += ribbonType;
+
+                if ((ribbonPixels[curPixelIndex + offset] & 0b11110000) == RIBBON_CONTEST_COLOUR_ID << 4)
+                    ribbonPixels[curPixelIndex + offset] += ribbonType << 4;
+            }
+
         }
     }
 
@@ -3971,12 +4011,12 @@ static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
 
     //TODO: Fix OT & ID on same line, then make ribbon sprite blit properly
     //TODO: Put the new ribbon pixels somewhere (maybe blit them, for example)
-    DebugPrintf("Blitting to %d, %d", x, y);
+    DebugPrintf("Blitting to %d, %d (rto %d | rt %d)", x, y, ribbonTileOffset, ribbonType);
     BlitBitmapToWindow(
         windowId,
         ribbonPixels,
         x+8,
-        y+16,
+        y+4,
         16,
         16
     );
