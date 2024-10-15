@@ -3875,15 +3875,16 @@ static void PrintMonOTNameID(void)
     u8 windowId;
     if (InBattleFactory() != TRUE && InSlateportBattleTent() != TRUE)
     {
-        u8 tSpaceSlash[] = _(" / ");
+        u8 tSpaceSlash[] = _("   {FONT_SMALL_NARROWER}{COLOR_HIGHLIGHT_SHADOW 1 0 2}{ID} ");
         windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
+        StringCopy(gStringVar1, sMonSummaryScreen->summary.OTName);
         ConvertIntToDecimalStringN(gStringVar2, (u16)sMonSummaryScreen->summary.OTID, STR_CONV_MODE_LEADING_ZEROS, 5);
         StringAppend(gStringVar1, tSpaceSlash);
         StringAppend(gStringVar1, gStringVar2);
         if (sMonSummaryScreen->summary.OTGender == 0)
-            PrintTextOnWindow(windowId, sMonSummaryScreen->summary.OTName, 12, 4, 0, 5);
+            PrintTextOnWindow(windowId, gStringVar1, 12, 4, 0, 5);
         else
-            PrintTextOnWindow(windowId, sMonSummaryScreen->summary.OTName, 12, 4, 0, 6);
+            PrintTextOnWindow(windowId, gStringVar1, 12, 4, 0, 6);
     }
     else
     {
