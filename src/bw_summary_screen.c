@@ -455,8 +455,8 @@ const u32 sSummaryPage_ContestMoves_Tilemap_BW[]            = INCBIN_U32("graphi
 const u32 sSummaryEffect_Battle_Tilemap_BW[]                = INCBIN_U32("graphics/summary_screen/bw/effect_battle.bin.lz");
 const u32 sSummaryEffect_Contest_Tilemap_BW[]               = INCBIN_U32("graphics/summary_screen/bw/effect_contest.bin.lz");
 const u16 sSummaryScreen_PPTextPalette_BW[]                 = INCBIN_U16("graphics/summary_screen/bw/text_pp.gbapal");
-const u32 sSummaryScreen_Ribbons_Gfx[]                      = INCBIN_U8("graphics/summary_screen/bw/ribbons.4bpp");
-const u32 sSummaryScreen_Ribbons_Pal[]                      = INCBIN_U8("graphics/summary_screen/bw/ribbons.gbapal");
+const u8 sSummaryScreen_Ribbons_Gfx[]                      = INCBIN_U8("graphics/summary_screen/bw/ribbons.4bpp");
+const u32 sSummaryScreen_Ribbons_Pal[]                      = INCBIN_U32("graphics/summary_screen/bw/ribbons.gbapal");
 
 // sprite gfx
 static const u8 sButtons_Gfx[][4 * TILE_SIZE_4BPP] = {
@@ -684,7 +684,7 @@ static const struct WindowTemplate sPageInfoTemplate[] =
         .tilemapTop = 9,
         .width = 12,
         .height = 4,
-        .paletteNum = 6,
+        .paletteNum = 0xc,
         .baseBlock = 359,
     }
 };
@@ -3895,26 +3895,11 @@ static void PrintMonOTNameID(void)
 }
 
 static void BlitRibbons(void)
-{
-    /*
-    retVal = substruct3->championRibbon
-    | (substruct3->coolRibbon << 1)
-    | (substruct3->beautyRibbon << 4)
-    | (substruct3->cuteRibbon << 7)
-    | (substruct3->smartRibbon << 10)
-    | (substruct3->toughRibbon << 13)
-    | (substruct3->winningRibbon << 16)
-    | (substruct3->victoryRibbon << 17)
-    | (substruct3->artistRibbon << 18)
-    | (substruct3->effortRibbon << 19)
-    | (substruct3->marineRibbon << 20)
-    | (substruct3->landRibbon << 21)
-    | (substruct3->skyRibbon << 22)
-    | (substruct3->countryRibbon << 23)
-    | (substruct3->nationalRibbon << 24)
-    | (substruct3->earthRibbon << 25)
-    | (substruct3->worldRibbon << 26);
-    */
+{    
+    LoadPalette(sSummaryScreen_Ribbons_Pal, PLTT_ID(0xc), PLTT_SIZE_4BPP);
+    u8 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
+    FillWindowPixelBuffer(sMonSummaryScreen->windowIds[PSS_DATA_WINDOW_INFO_RIBBONS], 0);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
     u32 ribbons = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_RIBBONS);
     u32 numRibbonsPrinted = 0;
     if (ribbons & 0x1)
@@ -3949,6 +3934,7 @@ static void BlitRibbons(void)
 }
 
 #define RIBBON_CONTEST_COLOUR_ID 7
+#define TILESIZE 8*8/2
 
 /*
 ribbonTile = how far down the png is it
@@ -3956,28 +3942,31 @@ ribbonTytpe = Cool, Beauty, Smart etc. (CONTEST_CATEGORY_COOL onwards)
 */
 static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
 {
-    // TODO: Load ribbon palette
     u8 palOffset = 0;
-    u8 ribbonPixels[32]; //16x16 ribbon = 256 bits = 32 bytes
+    u8 ribbonPixels[TILESIZE*4]; 
 
     if (ribbonType < CONTEST_CATEGORIES_COUNT)
         palOffset = ribbonType;
 
-    ribbonTile *= 16*8;
-
-    for (u16 curPixelIndex = 0; curPixelIndex < 16*16; curPixelIndex++)
+    for (u8 curTile = 0; curTile < 4; curTile++)
     {
-        u8 curRow = (curPixelIndex / 16) + (ribbonTile);
-        u8 dstCol = curPixelIndex % 16;
-        u8 srcCol = dstCol > 7 ? 15 - dstCol : dstCol;
-        u8 curPixel = sSummaryScreen_Ribbons_Gfx[(curRow * 8) + srcCol];
-
-        if (curPixel == RIBBON_CONTEST_COLOUR_ID)
-            curPixel += palOffset;
-        
-        ribbonPixels[curRow] = curPixel;
+        u16 offset = (curTile * TILESIZE);
+        for (u16 curPixelIndex = 0; curPixelIndex < TILESIZE; curPixelIndex++)
+        {
+            if (curTile % 2 == 0)
+                ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[curPixelIndex + ((curTile / 2) * TILESIZE)];
+            else // Mirror the sprite
+            {
+                ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[(3 - (curPixelIndex % 4) + ((curPixelIndex/4)*4)) + ((curTile / 2) * TILESIZE)];
+                ribbonPixels[curPixelIndex + offset] = (
+                   (0b00001111 & ribbonPixels[curPixelIndex + offset]) << 4 |
+                   (0b11110000 & ribbonPixels[curPixelIndex + offset]) >> 4
+                );
+            }
+        }
     }
 
+    u8 tmp[] = _("x");
     u8 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_RIBBONS, FALSE);
 
     //TODO: Fix OT & ID on same line, then make ribbon sprite blit properly
@@ -3986,11 +3975,12 @@ static void BlitRibbonSingle(u8 ribbonTile, u8 ribbonType, u16 x, u16 y)
     BlitBitmapToWindow(
         windowId,
         ribbonPixels,
-        x + 20,
-        y + 20,
+        x+8,
+        y+16,
         16,
         16
     );
+    CopyWindowToVram(windowId, COPYWIN_FULL);
 }
 
 static void PrintMonAbilityName(void)
