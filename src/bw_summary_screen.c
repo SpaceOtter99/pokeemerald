@@ -3903,11 +3903,14 @@ static void BlitRibbons(void)
     u32 ribbons = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_RIBBONS);
     u32 numRibbonsPrinted = 0;
 
+    // TODO: Make all unobtained ribbons show in grey
+
     // Champion Ribbon
     numRibbonsPrinted++;
     BlitRibbonSingle(sRibbonGfxData[CHAMPION_RIBBON].tileNumOffset, CONTEST_CATEGORIES_COUNT, 0, 0, ribbons & 0x1);
     ribbons >>= 1;
     
+    // Contest RIbbons
     for (u8 contest = 0; contest < CONTEST_CATEGORIES_COUNT; contest++)
     {
         for (u8 c = 0; c < (ribbons & 0b111); c++)
@@ -3918,6 +3921,8 @@ static void BlitRibbons(void)
         }
         ribbons >>= 3;
     }
+
+    // Special Ribbons
     u8 specialRibbonNum = 0;
     while (ribbons != 0)
     {
