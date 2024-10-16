@@ -235,7 +235,8 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     s16 switchCounter; // Used for various switch statement cases that decompress/load graphics or Pokémon data
     u16 monAnimTimer; // tracks time between re-playing mon anims
     bool8 monAnimPlayed; // tracks if anim has been played at least once
-    u8 unk_filler4[3];
+    u8 ribbonScreen;
+    u8 unk_filler4[2];
 } *sMonSummaryScreen = NULL;
 
 static EWRAM_DATA u8 sMoveSlotToReplace = 0;
@@ -312,7 +313,6 @@ static bool8 DoesMonOTMatchOwner(void);
 static bool8 DidMonComeFromGBAGames(void);
 static bool8 IsInGamePartnerMon(void);
 static void PrintEggOTName(void);
-static void PrintEggOTID(void);
 static void PrintEggState(void);
 static void PrintEggMemo(void);
 static void Task_PrintSkillsPage(u8);
@@ -490,7 +490,7 @@ static const struct BgTemplate sBgTemplates[] =
         .mapBaseIndex = 28,
         .screenSize = 0,
         .paletteMode = 0,
-        .priority = 0,
+        .priority = 3,
         .baseTile = 0,
     },
     {
@@ -498,7 +498,7 @@ static const struct BgTemplate sBgTemplates[] =
         .charBaseIndex = 2,
         .mapBaseIndex = 29,
         .paletteMode = 0,
-        .priority = 1,
+        .priority = 3,
         .baseTile = 0,
     },
     {
@@ -506,7 +506,7 @@ static const struct BgTemplate sBgTemplates[] =
         .charBaseIndex = 2,
         .mapBaseIndex = 30,
         .paletteMode = 0,
-        .priority = 2,
+        .priority = 3,
         .baseTile = 0,
     },
     {
@@ -2372,9 +2372,9 @@ static void Task_HandleInput(u8 taskId)
             {
                 if (sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
                 {
-                    StopPokemonAnimations();
                     PlaySE(SE_SELECT);
-                    BeginCloseSummaryScreen(taskId);
+                    sMonSummaryScreen->ribbonScreen = (sMonSummaryScreen->ribbonScreen + 1) % 2;
+                    BlitRibbons();
                 }
                 else // Contest or Battle Moves
                 {
@@ -3570,7 +3570,7 @@ static void PrintPageNamesAndStats(void)
     if (iconXPos < 0)
         iconXPos = 0;
     PrintAOrBButtonIcon(PSS_LABEL_WINDOW_PROMPT_CANCEL, FALSE, iconXPos);
-    PrintTextOnWindow(PSS_LABEL_WINDOW_PROMPT_CANCEL, sText_Cancel, stringXPos, 1, 0, 1);
+    PrintTextOnWindow(PSS_LABEL_WINDOW_PROMPT_CANCEL, sText_Switch, stringXPos, 1, 0, 1);
 
     stringXPos = GetStringRightAlignXOffset(FONT_NORMAL, sText_Info, 62);
     iconXPos = stringXPos - 16;
@@ -3769,7 +3769,6 @@ static void PrintInfoPageText(void)
     if (sMonSummaryScreen->summary.isEgg)
     {
         PrintEggOTName();
-        PrintEggOTID();
         PrintMonDexNumberSpecies();
         PrintEggState();
         PrintEggMemo();
@@ -3888,78 +3887,119 @@ static void PrintMonOTNameID(void)
     BlitRibbons();
 }
 
-#define RIBX(x) (13 * (x / 4)) + (2 * (x % 4))
-#define RIBY(y) (5 * (y % 4))
+#define RIBX(x) (11 * (x / 2)) + (6 * (x % 2)) + (2 * (x/4))
+#define RIBY(y) (12 * (y % 2)) + (4 * (y % 4 > 1))
 
 #define RIBBON_CONTEST_COLOUR_ID 7
+#define RIBBON_MISC_COLOUR_ID 6
 #define TILESIZE 8*8/2
+
+static void setLookup1(u8* lookup, u8 color1, u8 replace1)
+{
+    for (u16 i = 0; i < 256; ++i) {
+        u8 upper_pixel = (i >> 4) & 0x0F;
+        u8 lower_pixel = i & 0x0F;
+
+        // Replace pixels if they match the target color
+        if (upper_pixel == color1) 
+            upper_pixel = replace1;        
+        if (lower_pixel == color1) 
+            lower_pixel = replace1;
+        
+
+        // Store the modified byte in the lookup table
+        lookup[i] = (upper_pixel << 4) | (lower_pixel & 0x0F);
+    }
+}
+
+static void setLookup2(u8* lookup, u8 color1, u8 replace1, u8 color2, u8 replace2)
+{
+    for (u16 i = 0; i < 256; ++i) {
+        u8 upper_pixel = (i >> 4) & 0x0F;
+        u8 lower_pixel = i & 0x0F;
+
+        // Replace pixels if they match the target color
+        if (upper_pixel == color1) 
+            upper_pixel = replace1;
+        else if (upper_pixel == color2)
+            upper_pixel = replace2;        
+        if (lower_pixel == color1) 
+            lower_pixel = replace1;
+        else if (lower_pixel == color2)
+            lower_pixel = replace2;
+        
+
+        // Store the modified byte in the lookup table
+        lookup[i] = (upper_pixel << 4) | (lower_pixel & 0x0F);
+    }
+}
 
 static void BlitRibbons(void)
 {    
+    u8 curRibbonScreen = sMonSummaryScreen->ribbonScreen;
     LoadPalette(sSummaryScreen_Ribbons_Pal, PLTT_ID(0xc), PLTT_SIZE_4BPP);
     u8 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
-    //FillWindowPixelBuffer(sMonSummaryScreen->windowIds[PSS_DATA_WINDOW_INFO_OT_OTID_ITEM], 0);
+    FillWindowPixelRect(windowId, 0, 0, 16, 18*8, 5*8);
     CopyWindowToVram(windowId, COPYWIN_FULL);
+
     u32 ribbons = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_RIBBONS);
     u32 numRibbonsPrinted = 0;
 
     // Uncomment this to show all ribbons
     //ribbons = ((u16)(-1));
 
-    // Store champion ribbon if obtained
-    u8 champRibbon = (ribbons & 0b1);
-    ribbons >>= 1;
+    // Set empty lookup table
+    for (u16 i = 0; i < 256; i++) 
+        lookup[i] = i;
     
-    // Contest Ribbons
-    for (u8 contest = 0; contest < CONTEST_CATEGORIES_COUNT; contest++)
+    //TODO: Add some labels for what each page is
+    switch (curRibbonScreen)
     {
-        // Initialise lookup table
-        if (ribbons & 0b111)
-        {
-            for (int i = 0; i < 256; ++i) {
-                u8 upper_pixel = (i >> 4) & 0x0F;
-                u8 lower_pixel = i & 0x0F;
-
-                // Replace pixels if they match the target color
-                if (upper_pixel == RIBBON_CONTEST_COLOUR_ID) {
-                    upper_pixel += contest;
-                }
-                if (lower_pixel == RIBBON_CONTEST_COLOUR_ID) {
-                    lower_pixel += contest;
+        case 0:
+            // Contest Ribbons
+            ribbons >>= 1;
+            for (u8 contest = 0; contest < CONTEST_CATEGORIES_COUNT; contest++)
+            {
+                // Initialise lookup table
+                if (contest > 0 && ribbons & 0b111)
+                {
+                    setLookup1(lookup, RIBBON_CONTEST_COLOUR_ID, RIBBON_CONTEST_COLOUR_ID + contest);
                 }
 
-                // Store the modified byte in the lookup table
-                lookup[i] = (upper_pixel << 4) | (lower_pixel & 0x0F);
+                for (u8 c = 0; c <= CONTEST_RANK_MASTER; c++)
+                {
+                    BlitRibbonSingle(windowId, sRibbonGfxData[1 + (contest * 4) + c].tileNumOffset, contest, RIBX(numRibbonsPrinted), RIBY(numRibbonsPrinted), c < (ribbons & 0b111));
+                    numRibbonsPrinted++;
+                }
+                ribbons >>= 3;
             }
-        }
+            break;
 
-        for (u8 c = 0; c <= CONTEST_RANK_MASTER; c++)
-        {
-            BlitRibbonSingle(windowId, sRibbonGfxData[1 + (contest * 4) + c].tileNumOffset, contest, RIBX(numRibbonsPrinted), RIBY(numRibbonsPrinted), c < (ribbons & 0b111));
-            numRibbonsPrinted++;
-        }
-        ribbons >>= 3;
-    }
+        case 1:
+            // Now print champion ribbon, if obtained
+            if (ribbons & 0b1)
+            {
+                BlitRibbonSingle(windowId, sRibbonGfxData[CHAMPION_RIBBON].tileNumOffset, CONTEST_CATEGORIES_COUNT, RIBX(numRibbonsPrinted), RIBY(numRibbonsPrinted), ribbons & 0x1);
+                numRibbonsPrinted += 2;
+            }
+            ribbons >>= 16;
 
-    // Now print champion ribbon, if obtained
-    if (champRibbon)
-    {
-        BlitRibbonSingle(windowId, sRibbonGfxData[CHAMPION_RIBBON].tileNumOffset, CONTEST_CATEGORIES_COUNT, RIBX(numRibbonsPrinted), RIBY(numRibbonsPrinted), ribbons & 0x1);
-        numRibbonsPrinted++;
-    }
-
-    // Special Ribbons
-    u8 specialRibbonNum = 0;
-    while (ribbons)
-    {
-        if (ribbons & 0b1)
-        {
-            BlitRibbonSingle(windowId, sRibbonGfxData[WINNING_RIBBON + specialRibbonNum].tileNumOffset, CONTEST_CATEGORIES_COUNT, RIBX(numRibbonsPrinted), RIBY(numRibbonsPrinted), 1);
-            numRibbonsPrinted++;
-        }
-        
-        specialRibbonNum++;
-        ribbons >>= 1;
+            // Special Ribbons
+            u8 specialRibbonNum = 0;
+            setLookup2(lookup, RIBBON_MISC_COLOUR_ID, RIBBON_CONTEST_COLOUR_ID + CONTEST_CATEGORY_TOUGH,
+                            RIBBON_CONTEST_COLOUR_ID, RIBBON_CONTEST_COLOUR_ID + CONTEST_CATEGORY_CUTE);
+            while (ribbons)
+            {
+                if (ribbons & 0b1)
+                {
+                    BlitRibbonSingle(windowId, sRibbonGfxData[WINNING_RIBBON + specialRibbonNum].tileNumOffset, CONTEST_CATEGORIES_COUNT, RIBX(numRibbonsPrinted), RIBY(numRibbonsPrinted), 1);
+                    numRibbonsPrinted++;
+                }
+                
+                specialRibbonNum++;
+                ribbons >>= 1;
+            }
+            break;
     }
     CopyWindowToVram(windowId, COPYWIN_FULL);
 }
@@ -3987,9 +4027,7 @@ static void BlitRibbonSingle(u8 windowId, u8 ribbonTileOffset, u8 ribbonType, u1
         for (u16 curPixelIndex = 0; curPixelIndex < TILESIZE; curPixelIndex++)
         {
             u16 srcIndex = curPixelIndex + (ribbonTileOffset * TILESIZE * 4);
-            ribbonPixels[curPixelIndex + offset] = sSummaryScreen_Ribbons_Gfx[srcIndex + ((curTile) * TILESIZE)];
-            if (ribbonType < CONTEST_CATEGORIES_COUNT)
-                ribbonPixels[curPixelIndex + offset] = lookup[ribbonPixels[curPixelIndex + offset]];
+            ribbonPixels[curPixelIndex + offset] = lookup[sSummaryScreen_Ribbons_Gfx[srcIndex + ((curTile) * TILESIZE)]];
         }
     }
 
@@ -4190,14 +4228,12 @@ static bool8 IsInGamePartnerMon(void)
 
 static void PrintEggOTName(void)
 {
-    u32 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
-    PrintTextOnWindow(windowId, gText_FiveMarks, 12, 4, 0, 0);
-}
 
-static void PrintEggOTID(void)
-{
-    StringCopy(gStringVar1, gText_FiveMarks);
-    PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), gStringVar1, 12, 16, 0, 0);
+    u8 tFontColourRibbons[] = _("{COLOR_HIGHLIGHT_SHADOW 12 0 14}");
+    StringCopy(gStringVar1, tFontColourRibbons);
+    StringAppend(gStringVar1, gText_FiveMarks);
+    u32 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
+    PrintTextOnWindow(windowId, gStringVar1, 12, 4, 0, 0);
 }
 
 static void PrintEggState(void)
@@ -5269,7 +5305,7 @@ static u8 CreateMonSprite(struct Pokemon *unused, bool32 isShadow)
         shadowPalette = LoadSpritePalette(&sSpritePal_MonShadow);
         gSprites[spriteId].oam.paletteNum = shadowPalette;
         gSprites[spriteId].oam.objMode = ST_OAM_OBJ_BLEND;
-        gSprites[spriteId].x -= 5;
+        gSprites[spriteId].x += 5;
         gSprites[spriteId].y -= 2;
         gSprites[spriteId].oam.priority = 3;
     }
@@ -5421,7 +5457,7 @@ static void CreateCaughtBallSprite(struct Pokemon *mon)
     LoadBallGfx(ball);
     sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_BALL] = CreateSprite(&gBallSpriteTemplates[ball], 233, 38, 6);
     gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_BALL]].callback = SpriteCallbackDummy;
-    gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_BALL]].oam.priority = 1;
+    gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_BALL]].oam.priority = 3;
 }
 
 static void CreateSetStatusSprite(void)
