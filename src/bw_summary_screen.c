@@ -228,7 +228,8 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     u8 secondMoveIndex;
     bool8 lockMovesFlag; // This is used to prevent the player from changing position of moves in a battle or when trading.
     u8 bgDisplayOrder; // unused
-    u8 filler40CA;
+    u8 filler40CA:7;
+    u8 pauseTextPrinters:1;
     u8 windowIds[8];
     u8 spriteIds[SPRITE_ARR_ID_COUNT];
     bool8 handleDeoxys;
@@ -380,6 +381,13 @@ static void BufferAndPrintStats_HandleState(u8);
 static void SetFriendshipSprite(void);
 static void TrySetInfoPageIcons(void);
 static void RunMonAnimTimer(void);
+static void TaskWait(u8);
+static void TaskWait(u8 taskId)
+{    
+    if (sMonSummaryScreen->pauseTextPrinters)
+        DebugPrintf("Waiting!");
+        return;
+}
 
 // const rom data
 
@@ -2374,7 +2382,7 @@ static void Task_HandleInput(u8 taskId)
                 {
                     PlaySE(SE_SELECT);
                     sMonSummaryScreen->ribbonScreen = (sMonSummaryScreen->ribbonScreen + 1) % 2;
-                    BlitRibbons();
+                    ChangePage(taskId, 0);
                 }
                 else // Contest or Battle Moves
                 {
@@ -2570,10 +2578,10 @@ static void Task_ChangeSummaryMon(u8 taskId)
             gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_SHADOW]].sDelayAnim = 0;
         break;
     default:
-        if (!MenuHelpers_ShouldWaitForLinkRecv())
+        if (!gPaletteFade.active && !MenuHelpers_ShouldWaitForLinkRecv())
         {
             data[0] = 0; // tSkillsState
-            gTasks[taskId].func = Task_HandleInput;
+            gTasks[taskId].func = Task_HandleInput;            
         }
         return;
     }
@@ -2664,6 +2672,8 @@ static void ChangePage(u8 taskId, s8 delta)
     HidePageSpecificSprites();
 }
 
+#define PssScrollSteps 8
+
 static void PssScroll(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
@@ -2674,28 +2684,30 @@ static void PssScroll(u8 taskId)
         SetGpuReg(REG_OFFSET_MOSAIC, 0);
         SetBgTilemapBuffer(2, sMonSummaryScreen->bg2TilemapBuffers[sMonSummaryScreen->currPageIndex]);
         ShowBg(2);
+        SetGpuRegBits(REG_OFFSET_BG0CNT, BGCNT_MOSAIC);
         SetGpuRegBits(REG_OFFSET_BG2CNT, BGCNT_MOSAIC);
         if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
             SetGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
         PrintMonPortraitInfo();
+        sMonSummaryScreen->pauseTextPrinters = 1;
     }
     
     // build up mosaic effect
-    if (tScrollState <= 3)
+    if (tScrollState <= (PssScrollSteps/2))
     {
-        tMosaicStrength += 2;
+        tMosaicStrength += 1;
         SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
     }
     // build down mosaic effect
-    if (tScrollState > 3)
+    if (tScrollState >  (PssScrollSteps/2))
     {
-        tMosaicStrength -= 2;
+        tMosaicStrength -= 1;
         SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
     }
 
     tScrollState++;
 
-    if (tScrollState >= 8)
+    if (tScrollState >= PssScrollSteps)
         gTasks[taskId].func = PssScrollEnd;
 }
 
@@ -2716,6 +2728,7 @@ static void PssScrollEnd(u8 taskId)
         }
     }
 
+    ClearGpuRegBits(REG_OFFSET_BG0CNT, BGCNT_MOSAIC);
     ClearGpuRegBits(REG_OFFSET_BG2CNT, BGCNT_MOSAIC);
     if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
         ClearGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
@@ -2743,6 +2756,7 @@ static void PssScrollEnd(u8 taskId)
     {
         CreateMonItemSprite();
     }
+    sMonSummaryScreen->pauseTextPrinters = 0;
 
     SwitchTaskToFollowupFunc(taskId);
 }
@@ -3761,7 +3775,7 @@ static void PrintPageSpecificText(u8 pageIndex)
 
 static void CreateTextPrinterTask(u8 pageIndex)
 {
-    CreateTask(sTextPrinterTasks[pageIndex], 16);
+    DebugPrintf("Created task %d", CreateTask(sTextPrinterTasks[pageIndex], 16));
 }
 
 static void PrintInfoPageText(void)
@@ -3776,6 +3790,7 @@ static void PrintInfoPageText(void)
     else
     {
         PrintMonOTNameID();
+        BlitRibbons();
         PrintMonDexNumberSpecies();
         PrintHeldItemName();
         BufferMonTrainerMemo();
@@ -3786,6 +3801,13 @@ static void PrintInfoPageText(void)
 static void Task_PrintInfoPage(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
+
+    if (sMonSummaryScreen->pauseTextPrinters)
+    {
+        data[0] = 1;
+        return;
+    }
+
     switch (data[0])
     {
     case 1:
@@ -3874,24 +3896,37 @@ static void PrintMonOTNameID(void)
         ConvertIntToDecimalStringN(gStringVar2, (u16)sMonSummaryScreen->summary.OTID, STR_CONV_MODE_LEADING_ZEROS, 5);
         StringAppend(gStringVar1, tOTIDPre);
         StringAppend(gStringVar1, gStringVar2);
-        if (sMonSummaryScreen->summary.OTGender == GENDER_MALE)
-            PrintTextOnWindow(windowId, gStringVar1, 12, 4, 0, 0);
-        else
-            PrintTextOnWindow(windowId, gStringVar1, 12, 4, 0, 0);
+        PrintTextOnWindow(windowId, gStringVar1, 12, 4, 0, 0);
     }
     else
     {
         StringCopy(gStringVar1, sText_RentalPkmn);
         PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), gStringVar1, 12, 4, 0, 0);
     }
-    BlitRibbons();
 }
 
-#define RIBX(x) (11 * (x / 2)) + (6 * (x % 2)) + (2 * (x/4))
-#define RIBY(y) (12 * (y % 2)) + (4 * (y % 4 > 1))
+#define RIBX(x) (12 * (x / 2)) + (6 * (x % 2)) + (1 * (x/4))
 
-#define RIBBON_CONTEST_COLOUR_ID 7
-#define RIBBON_MISC_COLOUR_ID 6
+#define RIBY(y) (15 * (y % 2)) + (1 * (y % 4 > 1))
+
+enum {
+    R_TRANS,
+    R_OUTLINE,
+    R_GOLD_DARK,
+    R_GOLD,
+    R_GOLD_LIGHT,
+    R_WHITE,
+    R_PURPLE,
+    R_RED,
+    R_BLUE,
+    R_PINK,
+    R_GREEN,
+    R_ORANGE,
+    R_BLACK,
+    R_DARK_GREY,
+    R_LIGHT_GREY,
+    R_MISC,
+};
 #define TILESIZE 8*8/2
 
 static void setLookup1(u8* lookup, u8 color1, u8 replace1)
@@ -3902,10 +3937,9 @@ static void setLookup1(u8* lookup, u8 color1, u8 replace1)
 
         // Replace pixels if they match the target color
         if (upper_pixel == color1) 
-            upper_pixel = replace1;        
+            upper_pixel = replace1;
         if (lower_pixel == color1) 
             lower_pixel = replace1;
-        
 
         // Store the modified byte in the lookup table
         lookup[i] = (upper_pixel << 4) | (lower_pixel & 0x0F);
@@ -3961,9 +3995,9 @@ static void BlitRibbons(void)
             for (u8 contest = 0; contest < CONTEST_CATEGORIES_COUNT; contest++)
             {
                 // Initialise lookup table
-                if (contest > 0 && ribbons & 0b111)
+                //if (contest > 0 && ribbons & 0b111)
                 {
-                    setLookup1(lookup, RIBBON_CONTEST_COLOUR_ID, RIBBON_CONTEST_COLOUR_ID + contest);
+                    setLookup1(lookup, R_RED, R_RED + contest);
                 }
 
                 for (u8 c = 0; c <= CONTEST_RANK_MASTER; c++)
@@ -3986,8 +4020,7 @@ static void BlitRibbons(void)
 
             // Special Ribbons
             u8 specialRibbonNum = 0;
-            setLookup2(lookup, RIBBON_MISC_COLOUR_ID, RIBBON_CONTEST_COLOUR_ID + CONTEST_CATEGORY_TOUGH,
-                            RIBBON_CONTEST_COLOUR_ID, RIBBON_CONTEST_COLOUR_ID + CONTEST_CATEGORY_CUTE);
+            setLookup2(lookup, R_PURPLE, R_ORANGE, R_RED, R_PINK);
             while (ribbons)
             {
                 if (ribbons & 0b1)
@@ -4002,6 +4035,7 @@ static void BlitRibbons(void)
             break;
     }
     CopyWindowToVram(windowId, COPYWIN_FULL);
+
 }
 
 /*
@@ -4015,7 +4049,7 @@ static void BlitRibbonSingle(u8 windowId, u8 ribbonTileOffset, u8 ribbonType, u1
 
     if (!obtained)
     {
-        return;
+        //return;
     }
 
     if (ribbonType < CONTEST_CATEGORIES_COUNT)
@@ -4033,9 +4067,6 @@ static void BlitRibbonSingle(u8 windowId, u8 ribbonTileOffset, u8 ribbonType, u1
 
     u8 tmp[] = _("x");
 
-    //TODO: Fix OT & ID on same line, then make ribbon sprite blit properly
-    //TODO: Put the new ribbon pixels somewhere (maybe blit them, for example)
-    DebugPrintf("Blitting to %d, %d (rto %d | rt %d)", x, y, ribbonTileOffset, ribbonType);
     BlitBitmapToWindow(
         windowId,
         ribbonPixels,
@@ -4079,9 +4110,7 @@ void replaceHalfwaySpaceWithNewline(u8 str[]) {
     // Traverse the string starting from the halfway point
     for (u8 i = 0; i < 28; i++) {
         u8 searchIndex = halfway + (i / 2) * (i % 2 ? 1 : -1);
-        DebugPrintf("%d/i%d: %d (%x)", searchIndex, i, str[i], str[i]);
         if (str[searchIndex] == 0 && found == 0) {
-            DebugPrintf("%d: NEWLINE", searchIndex);
             str[searchIndex] = CHAR_NEWLINE;  // Replace the first space with a newline
             found = 1;  // Stop after the first replacement
         }
@@ -4296,6 +4325,12 @@ static void PrintSkillsPageText(void)
 static void Task_PrintSkillsPage(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
+
+    if (sMonSummaryScreen->pauseTextPrinters)
+    {
+        data[0] = 1;
+        return;
+    }
 
     switch (data[0])
     {
@@ -4662,6 +4697,12 @@ static void Task_PrintBattleMoves(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
 
+    if (sMonSummaryScreen->pauseTextPrinters)
+    {
+        data[0] = 1;
+        return;
+    }
+
     switch (data[0])
     {
     case 1:
@@ -4791,6 +4832,12 @@ static void PrintContestMoves(void)
 static void Task_PrintContestMoves(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
+
+    if (sMonSummaryScreen->pauseTextPrinters)
+    {
+        data[0] = 1;
+        return;
+    }
 
     switch (data[0])
     {

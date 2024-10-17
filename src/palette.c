@@ -553,6 +553,12 @@ void BeginFastPaletteFade(u8 submode)
     BeginFastPaletteFadeInternal(submode);
 }
 
+void BeingVeryFastPaletteFade(u8 submode)
+{
+    gPaletteFade.deltaY = 5;
+    BeginFastPaletteFadeInternal(submode);
+}
+
 static void BeginFastPaletteFadeInternal(u8 submode)
 {
     gPaletteFade.y = 31;

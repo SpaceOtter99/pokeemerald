@@ -37,6 +37,7 @@ u8 CreateTask(TaskFunc func, u8 priority)
             InsertTask(i);
             memset(gTasks[i].data, 0, sizeof(gTasks[i].data));
             gTasks[i].isActive = TRUE;
+            DebugPrintf("INTERNAL: Creating task %d", i);
             return i;
         }
     }
@@ -83,6 +84,7 @@ static void InsertTask(u8 newTaskId)
 
 void DestroyTask(u8 taskId)
 {
+    DebugPrintf("Destroying task %d", taskId);
     if (gTasks[taskId].isActive)
     {
         gTasks[taskId].isActive = FALSE;
