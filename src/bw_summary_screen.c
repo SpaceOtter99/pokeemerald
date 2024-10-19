@@ -228,7 +228,7 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     u8 secondMoveIndex;
     bool8 lockMovesFlag; // This is used to prevent the player from changing position of moves in a battle or when trading.
     u8 bgDisplayOrder; // unused
-    u8 filler40CA;
+    u8 isPrinting;
     u8 windowIds[8];
     u8 spriteIds[SPRITE_ARR_ID_COUNT];
     bool8 handleDeoxys;
@@ -2476,10 +2476,16 @@ static void Task_ChangeSummaryMon(u8 taskId)
 
     switch (tSummaryState)
     {
-    case 0:
+    case 0:        
+        SetGpuReg(REG_OFFSET_MOSAIC, 0);
+        SetGpuRegBits(REG_OFFSET_BG0CNT, BGCNT_MOSAIC);
+        SetGpuRegBits(REG_OFFSET_BG2CNT, BGCNT_MOSAIC);
+        if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
+            SetGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
         StopCryAndClearCrySongs();
         break;
     case 1:
+        HidePageSpecificSprites();
         SummaryScreen_DestroyAnimDelayTask();
         DestroySpriteAndFreeResources(&gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]]);
         if (BW_SUMMARY_MON_SHADOWS)
@@ -2572,12 +2578,23 @@ static void Task_ChangeSummaryMon(u8 taskId)
     default:
         if (!MenuHelpers_ShouldWaitForLinkRecv())
         {
+            ClearGpuRegBits(REG_OFFSET_BG0CNT, BGCNT_MOSAIC);
+            ClearGpuRegBits(REG_OFFSET_BG2CNT, BGCNT_MOSAIC);
+            if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
+                ClearGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
+
+            SetGpuReg(REG_OFFSET_MOSAIC, 0);
             data[0] = 0; // tSkillsState
             gTasks[taskId].func = Task_HandleInput;
         }
         return;
     }
+
+    if (tSummaryState < 14)
     tSummaryState++;
+
+    u8 tMosaicStrength = min(tSummaryState, 14 - tSummaryState);
+    SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
 }
 
 static s8 AdvanceMonIndex(s8 delta)
@@ -2656,51 +2673,90 @@ static void ChangePage(u8 taskId, s8 delta)
         return;
 
     PlaySE(SE_SELECT);
-    ClearPageWindowTilemaps(sMonSummaryScreen->currPageIndex);
     sMonSummaryScreen->currPageIndex += delta;
     tScrollState = 0;
     SetTaskFuncWithFollowupFunc(taskId, PssScroll, gTasks[taskId].func);
-    CreateTextPrinterTask(sMonSummaryScreen->currPageIndex);
-    HidePageSpecificSprites();
 }
 
 static void PssScroll(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
 
-    if (tScrollState == 0)
+    switch (tScrollState)
     {
+    case 0:
         tMosaicStrength = 0;
         SetGpuReg(REG_OFFSET_MOSAIC, 0);
-        SetBgTilemapBuffer(2, sMonSummaryScreen->bg2TilemapBuffers[sMonSummaryScreen->currPageIndex]);
-        ShowBg(2);
+        SetGpuRegBits(REG_OFFSET_BG0CNT, BGCNT_MOSAIC);
         SetGpuRegBits(REG_OFFSET_BG2CNT, BGCNT_MOSAIC);
         if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
             SetGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
-        PrintMonPortraitInfo();
-    }
-    
-    // build up mosaic effect
-    if (tScrollState <= 3)
-    {
-        tMosaicStrength += 2;
-        SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
-    }
-    // build down mosaic effect
-    if (tScrollState > 3)
-    {
-        tMosaicStrength -= 2;
-        SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
-    }
+        tScrollState++;
+        break;
+    case 1:
+    case 2:
+    case 3:
+        tMosaicStrength++;
+        tScrollState++;
+        break;
+    case 4:
+        ClearPageWindowTilemaps(sMonSummaryScreen->currPageIndex);
+        HidePageSpecificSprites();
+        SetBgTilemapBuffer(2, sMonSummaryScreen->bg2TilemapBuffers[sMonSummaryScreen->currPageIndex]);
+        CreateTextPrinterTask(sMonSummaryScreen->currPageIndex);
+        tScrollState++;
+        break;
+    case 5:
+        if (sMonSummaryScreen->isPrinting && sMonSummaryScreen->isPrinting < TASK_PRINT_MAX_STEPS)
+        {
+            if (tMosaicStrength <= 15)
+                tMosaicStrength++;
+        }
+        else
+        {
+            PutPageWindowTilemaps(sMonSummaryScreen->currPageIndex);
+            TryDrawHPBar();
+            TryDrawExperienceProgressBar();
+            PrintMonPortraitInfo();
+            ScheduleBgCopyTilemapToVram(2);
+            tScrollState++;
+        }
+        break;
+    case 6:
+        if (tMosaicStrength > 0)
+            tMosaicStrength--;
+        else
+            tScrollState++;
+        if (tMosaicStrength == 3)
+        {
+            SetTypeIcons();
+            TrySetInfoPageIcons();
 
-    tScrollState++;
+            if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS && BW_SUMMARY_IV_EV_DISPLAY == BW_IV_EV_GRADED)
+                ShowGradeIcons(SKILL_STATE_IVS);
 
-    if (tScrollState >= 8)
+            if (sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
+                if (sMonSummaryScreen->markingsSprite != NULL)
+                    sMonSummaryScreen->markingsSprite->invisible = FALSE; 
+
+            if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS || sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
+                CreateMonItemSprite();
+        }
+        break;
+    case 7:
         gTasks[taskId].func = PssScrollEnd;
+        return;
+    }
+
+    DebugPrintf("isPrinting: %d  |  tScrollState: %d | tMosaicStrength: %d", sMonSummaryScreen->isPrinting, tScrollState, tMosaicStrength);
+
+    SetGpuReg(REG_OFFSET_MOSAIC, (tMosaicStrength & 15) * 17);
+
 }
 
 static void PssScrollEnd(u8 taskId)
 {
+    DebugPrintf("Starting scroll end");
     if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
     {
         if (sMonSummaryScreen->currPageIndex == PSS_PAGE_CONTEST_MOVES)
@@ -2716,33 +2772,12 @@ static void PssScrollEnd(u8 taskId)
         }
     }
 
+    ClearGpuRegBits(REG_OFFSET_BG0CNT, BGCNT_MOSAIC);
     ClearGpuRegBits(REG_OFFSET_BG2CNT, BGCNT_MOSAIC);
     if (sMonSummaryScreen->mode == BW_SUMMARY_MODE_SELECT_MOVE)
         ClearGpuRegBits(REG_OFFSET_BG1CNT, BGCNT_MOSAIC);
 
     SetGpuReg(REG_OFFSET_MOSAIC, 0);
-    ScheduleBgCopyTilemapToVram(2);
-    PutPageWindowTilemaps(sMonSummaryScreen->currPageIndex);
-    PrintMonPortraitInfo();
-
-    SetTypeIcons();
-    TrySetInfoPageIcons();
-    TryDrawHPBar();
-    TryDrawExperienceProgressBar();
-
-    if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS && BW_SUMMARY_IV_EV_DISPLAY == BW_IV_EV_GRADED)
-        ShowGradeIcons(SKILL_STATE_IVS);
-
-    if (sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
-    {
-        if (sMonSummaryScreen->markingsSprite != NULL)
-           sMonSummaryScreen->markingsSprite->invisible = FALSE; 
-    } 
-
-    if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS || sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
-    {
-        CreateMonItemSprite();
-    }
 
     SwitchTaskToFollowupFunc(taskId);
 }
@@ -3806,11 +3841,12 @@ static void Task_PrintInfoPage(u8 taskId)
     case 6:
         PrintMonTrainerMemo();
         break;
-    case 7:
+    case TASK_PRINT_MAX_STEPS:
+        sMonSummaryScreen->isPrinting = FALSE;
         DestroyTask(taskId);
         return;
-    }
-    data[0]++;
+    }    
+    sMonSummaryScreen->isPrinting = ++data[0];
 }
 
 static void PrintMonDexNumberSpecies(void)
@@ -4035,7 +4071,6 @@ static void BlitRibbonSingle(u8 windowId, u8 ribbonTileOffset, u8 ribbonType, u1
 
     //TODO: Fix OT & ID on same line, then make ribbon sprite blit properly
     //TODO: Put the new ribbon pixels somewhere (maybe blit them, for example)
-    DebugPrintf("Blitting to %d, %d (rto %d | rt %d)", x, y, ribbonTileOffset, ribbonType);
     BlitBitmapToWindow(
         windowId,
         ribbonPixels,
@@ -4079,9 +4114,7 @@ void replaceHalfwaySpaceWithNewline(u8 str[]) {
     // Traverse the string starting from the halfway point
     for (u8 i = 0; i < 28; i++) {
         u8 searchIndex = halfway + (i / 2) * (i % 2 ? 1 : -1);
-        DebugPrintf("%d/i%d: %d (%x)", searchIndex, i, str[i], str[i]);
         if (str[searchIndex] == 0 && found == 0) {
-            DebugPrintf("%d: NEWLINE", searchIndex);
             str[searchIndex] = CHAR_NEWLINE;  // Replace the first space with a newline
             found = 1;  // Stop after the first replacement
         }
@@ -4326,11 +4359,12 @@ static void Task_PrintSkillsPage(u8 taskId)
     case 9:
         PrintHeldItemName();
         break;
-    case 10:
+    case TASK_PRINT_MAX_STEPS:
+        sMonSummaryScreen->isPrinting = FALSE;
         DestroyTask(taskId);
         return;
     }
-    data[0]++;
+    sMonSummaryScreen->isPrinting = ++data[0];
 }
 
 static void PrintHeldItemName(void)
@@ -4696,11 +4730,12 @@ static void Task_PrintBattleMoves(u8 taskId)
                 PrintMoveDetails(data[1]);
         }
         break;
-    case 8:
+    case TASK_PRINT_MAX_STEPS:
+        sMonSummaryScreen->isPrinting = FALSE;
         DestroyTask(taskId);
         return;
     }
-    data[0]++;
+    sMonSummaryScreen->isPrinting = ++data[0];
 }
 
 static void PrintMoveNameAndPP(u8 moveIndex)
@@ -4817,11 +4852,12 @@ static void Task_PrintContestMoves(u8 taskId)
                 PrintContestMoveDescription(sMonSummaryScreen->firstMoveIndex);
         }
         break;
-    case 7:
+    case TASK_PRINT_MAX_STEPS:
+        sMonSummaryScreen->isPrinting = FALSE;
         DestroyTask(taskId);
         return;
     }
-    data[0]++;
+    sMonSummaryScreen->isPrinting = ++data[0];
 }
 
 static void PrintContestMoveDescription(u8 moveSlot)

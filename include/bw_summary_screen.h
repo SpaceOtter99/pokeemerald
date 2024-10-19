@@ -13,6 +13,7 @@
 #define BW_IV_EV_PRECISE                            2       // show precise values for IVs and EVs
 #define BW_SUMMARY_MON_IDLE_ANIMS_FRAMES            300     // number of frames between each idle anim IF BW_SUMMARY_MON_IDLE_ANIMS is true.
                                                             // for reference, Emerald runs at 60FPS by default
+#define TASK_PRINT_MAX_STEPS                        10
 
 // configs
 #define BW_SUMMARY_AUTO_FORMAT_MOVE_DESCRIPTIONS    TRUE                // automatically formats move descriptions to fit the new box size. disable if you want to format them manually
