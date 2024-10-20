@@ -1644,14 +1644,24 @@ const u32 gPartyMenuPokeball_Gfx[] = INCBIN_U32("graphics/party_menu/pokeball.4b
 const u32 gPartyMenuPokeballSmall_Gfx[] = INCBIN_U32("graphics/party_menu/pokeball_small.4bpp.lz"); //unused
 const u32 gPartyMenuPokeball_Pal[] = INCBIN_U32("graphics/party_menu/pokeball.gbapal.lz");
 
+#if BW_TYPE_GRAPHICS
+const u32 gStatusGfx_Icons[] = INCBIN_U32("graphics/summary_screen/bw/status_icons.4bpp.lz");
+const u32 gStatusPal_Icons[] = INCBIN_U32("graphics/summary_screen/bw/status_icons.gbapal.lz");
+#else
 const u32 gStatusGfx_Icons[] = INCBIN_U32("graphics/interface/status_icons.4bpp.lz");
 const u32 gStatusPal_Icons[] = INCBIN_U32("graphics/interface/status_icons.gbapal.lz");
+#endif
 
 const u16 gCategoryIcons_Pal[] = INCBIN_U16("graphics/interface/category_icons.gbapal");
 const u32 gCategoryIcons_Gfx[] = INCBIN_U32("graphics/interface/category_icons.4bpp.lz");
 
+#if BW_TYPE_GRAPHICS
+const u32 gMoveTypes_Gfx[] = INCBIN_U32("graphics/types_bw/move_types_bw.4bpp.lz");
+const u32 gMoveTypes_Pal[] = INCBIN_U32("graphics/types_bw/move_types_bw.gbapal.lz");
+#else
 const u32 gMoveTypes_Gfx[] = INCBIN_U32("graphics/types/move_types.4bpp.lz");
 const u32 gMoveTypes_Pal[] = INCBIN_U32("graphics/types/move_types.gbapal.lz");
+#endif
 
 const u32 gSummaryMoveSelect_Gfx[] = INCBIN_U32("graphics/summary_screen/move_select.4bpp.lz");
 const u32 gSummaryMoveSelect_Pal[] = INCBIN_U32("graphics/summary_screen/move_select.gbapal.lz");
