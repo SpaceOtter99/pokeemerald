@@ -1828,6 +1828,7 @@ static bool8 LoadGraphics(void)
         gMain.state++;
         break;
     case 6:
+        LoadPalette(sSummaryScreen_Ribbons_Pal, PLTT_ID(0xc), PLTT_SIZE_4BPP);
         if (DecompressGraphics() != FALSE)
             gMain.state++;
         break;
@@ -2374,7 +2375,7 @@ static void Task_HandleInput(u8 taskId)
                 {
                     PlaySE(SE_SELECT);
                     sMonSummaryScreen->ribbonScreen = (sMonSummaryScreen->ribbonScreen + 1) % 2;
-                    BlitRibbons();
+                    ChangePage(taskId, 0);
                 }
                 else // Contest or Battle Moves
                 {
@@ -3920,7 +3921,6 @@ static void PrintMonOTNameID(void)
         StringCopy(gStringVar1, sText_RentalPkmn);
         PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE), gStringVar1, 12, 4, 0, 0);
     }
-    BlitRibbons();
 }
 
 #define RIBX(x) (11 * (x / 2)) + (6 * (x % 2)) + (2 * (x/4))
@@ -3973,7 +3973,6 @@ static void setLookup2(u8* lookup, u8 color1, u8 replace1, u8 color2, u8 replace
 static void BlitRibbons(void)
 {    
     u8 curRibbonScreen = sMonSummaryScreen->ribbonScreen;
-    LoadPalette(sSummaryScreen_Ribbons_Pal, PLTT_ID(0xc), PLTT_SIZE_4BPP);
     u8 windowId = AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_OT_OTID_ITEM, FALSE);
     FillWindowPixelRect(windowId, 0, 0, 16, 18*8, 5*8);
     CopyWindowToVram(windowId, COPYWIN_FULL);
