@@ -4121,6 +4121,76 @@ const struct SpeciesInfo gSpeciesInfoGen4[] =
         .levelUpLearnset = sHippowdonLevelUpLearnset,
         .teachableLearnset = sHippowdonTeachableLearnset,
     },
+
+#if P_CUSTOM_FORMS
+[SPECIES_HIPPOPOTAS] =
+    {
+        .baseHP        = 78,
+        .baseAttack    = 31,
+        .baseDefense   = 74,
+        .baseSpeed     = 34,
+        .baseSpAttack  = 63,
+        .baseSpDefense = 50,
+        .types = MON_TYPES(TYPE_ROCK, TYPE_GHOST),
+        .catchRate = 100,
+        .expYield = (P_UPDATED_EXP_YIELDS >= GEN_5) ? 66 : 95,
+        .evYield_HP = 2,
+        .genderRatio = PERCENT_FEMALE(50),
+        .eggCycles = 30,
+        .friendship = STANDARD_FRIENDSHIP,
+        .growthRate = GROWTH_SLOW,
+        .eggGroups = MON_EGG_GROUPS(EGG_GROUP_FIELD, EGG_GROUP_MINERAL),
+        .abilities = { ABILITY_STRONG_JAW, ABILITY_ARENA_TRAP, ABILITY_EARTH_EATER },
+        .bodyColor = BODY_COLOR_BROWN,
+        .speciesName = _("Hippopotas"),
+        .cryId = CRY_HIPPOPOTAS,
+        .natDexNum = NATIONAL_DEX_HIPPOPOTAS,
+        .categoryName = _("Ghost Hippo"),
+        .height = 8,
+        .weight = 495,
+        .description = COMPOUND_STRING(
+            "Hippopotas drags itself along cave floors,\n"
+            "its form partially fused with the rocks\n"
+            "beneath it. It leaves a trail of fine mist\n"
+            "wherever it goes."),
+        .pokemonScale = 366,
+        .pokemonOffset = 11,
+        .trainerScale = 257,
+        .trainerOffset = 0,
+        .frontPic = gMonFrontPic_HippopotasRegional,
+        .frontPicSize = MON_COORDS_SIZE(64, 40),
+        .frontPicYOffset = 12,
+        .frontAnimFrames = sAnims_Hippopotas,
+        .frontAnimId = ANIM_V_STRETCH,
+        .backPic = gMonBackPic_HippopotasRegional,
+        .backPicSize = MON_COORDS_SIZE(64, 40),
+        .backPicYOffset = 14,
+        .backAnimId = BACK_ANIM_H_SLIDE,
+        .palette = gMonPalette_HippopotasRegional,
+        .paletteFemale = gMonPalette_HippopotasRegionalF,
+        .shinyPalette = gMonShinyPalette_HippopotasRegional,
+        .shinyPaletteFemale = gMonShinyPalette_HippopotasRegionalF,
+        .iconSprite = gMonIcon_HippopotasRegional,
+        .iconPalIndex = 1,
+    #if P_CUSTOM_GENDER_DIFF_ICONS == TRUE
+        .iconSpriteFemale = gMonIcon_HippopotasRegionalF,
+        .iconPalIndexFemale = 1,
+    #endif
+        FOOTPRINT(Hippopotas)
+        OVERWORLD(
+            sPicTable_Hippopotas,
+            SIZE_32x32,
+            SHADOW_SIZE_M,
+            TRACKS_FOOT,
+            gOverworldPalette_HippopotasRegional,
+            gShinyOverworldPalette_HippopotasRegional
+        )
+        .levelUpLearnset = sHippopotasRegionalLevelUpLearnset,
+        .teachableLearnset = sHippopotasTeachableLearnset,
+        .eggMoveLearnset = sHippopotasEggMoveLearnset,
+        .evolutions = EVOLUTION({EVO_LEVEL, 34, SPECIES_HIPPOWDON}),
+    },
+#endif //P_CUSTOM_FORMS
 #endif //P_FAMILY_HIPPOPOTAS
 
 #if P_FAMILY_SKORUPI

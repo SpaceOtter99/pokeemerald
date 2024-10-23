@@ -10513,6 +10513,37 @@ const u32 gObjectEventPic_Substitute[] = INCBIN_COMP("graphics/pokemon/question_
     // const u32 gShinyOverworldPalette_HippowdonF[] = INCBIN_U32("graphics/pokemon/hippowdon/overworld_shiny.gbapal.lz");
 #endif //OW_PKMN_OBJECTS_SHARE_PALETTES
 #endif //OW_POKEMON_OBJECT_EVENTS
+
+#ifdef P_CUSTOM_FORMS
+    const u32 gMonFrontPic_HippopotasRegional[] = INCBIN_U32("graphics/pokemon/hippopotas/regional/anim_front.4bpp.lz");
+    const u32 gMonPalette_HippopotasRegional[] = INCBIN_U32("graphics/pokemon/hippopotas/regional/normal.gbapal.lz");
+    const u32 gMonBackPic_HippopotasRegional[] = INCBIN_U32("graphics/pokemon/hippopotas/regional/back.4bpp.lz");
+    const u32 gMonShinyPalette_HippopotasRegional[] = INCBIN_U32("graphics/pokemon/hippopotas/regional/shiny.gbapal.lz");
+    const u8 gMonIcon_HippopotasRegional[] = INCBIN_U8("graphics/pokemon/hippopotas/regional/icon.4bpp");
+#if P_FOOTPRINTS
+    const u8 gMonFootprint_HippopotasRegional[] = INCBIN_U8("graphics/pokemon/hippopotas/footprint.1bpp");
+#endif //P_FOOTPRINTS
+#if OW_POKEMON_OBJECT_EVENTS
+    const u32 gObjectEventPic_HippopotasRegional[] = INCBIN_COMP("graphics/pokemon/hippopotas/overworld.4bpp");
+#if OW_PKMN_OBJECTS_SHARE_PALETTES == FALSE
+    const u32 *gOverworldPalette_HippopotasRegional = gMonPalette_HippopotasRegional;
+    const u32 *gShinyOverworldPalette_HippopotasRegional = gMonShinyPalette_HippopotasRegional;
+#endif //OW_PKMN_OBJECTS_SHARE_PALETTES
+#endif //OW_POKEMON_OBJECT_EVENTS
+
+    const u32 gMonPalette_HippopotasRegionalF[] = INCBIN_U32("graphics/pokemon/hippopotas/normalf.gbapal.lz");
+    const u32 gMonShinyPalette_HippopotasRegionalF[] = INCBIN_U32("graphics/pokemon/hippopotas/shinyf.gbapal.lz");
+#if P_CUSTOM_GENDER_DIFF_ICONS
+    const u8 gMonIcon_HippopotasRegionalF[] = INCBIN_U8("graphics/pokemon/hippopotas/iconf.4bpp");
+#endif
+#if OW_POKEMON_OBJECT_EVENTS
+    const u32 gObjectEventPic_HippopotasRegionalF[] = INCBIN_COMP("graphics/pokemon/hippopotas/overworld.4bpp");
+#if OW_PKMN_OBJECTS_SHARE_PALETTES == FALSE
+    // const u32 gOverworldPalette_HippopotasF[] = INCBIN_U32("graphics/pokemon/hippopotas/overworld_normal.gbapal.lz");
+    // const u32 gShinyOverworldPalette_HippopotasF[] = INCBIN_U32("graphics/pokemon/hippopotas/overworld_shiny.gbapal.lz");
+#endif //OW_PKMN_OBJECTS_SHARE_PALETTES
+#endif //OW_POKEMON_OBJECT_EVENTS
+#endif //P_CUSTOM_FORMS
 #endif //P_FAMILY_HIPPOPOTAS
 
 #if P_FAMILY_SKORUPI
