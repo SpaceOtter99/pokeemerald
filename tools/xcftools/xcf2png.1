@@ -1,0 +1,328 @@
+.\" Manual page for xcf2png
+.\" This file was written by Henning Makholm <henning@makholm.net>
+.\" It is hereby in the public domain.
+.\" 
+.\" In jurisdictions that do not recognise grants of copyright to the
+.\" public domain: I, the author and (presumably, in those jurisdictions)
+.\" copyright holder, hereby permit anyone to distribute and use this code,
+.\" in source code or binary form, with or without modifications. This
+.\" permission is world-wide and irrevocable.
+.\"
+.\" Of course, I will not be liable for any errors or shortcomings in the
+.\" code, since I give it away without asking any compenstations.
+.\"
+.\" If you use or distribute this code, I would appreciate receiving
+.\" credit for writing it, in whichever way you find proper and customary.
+.TH xcf2png 1 2006-02-12 "Xcftools" ""
+.SH NAME
+xcf2png \- convert from GIMP xcf files to png format
+.ds p xcf2png
+.SH SYNOPSIS
+.B \*p
+[
+.I options
+]
+.I filename
+[
+.I layer names
+]
+.SH DESCRIPTION
+.B xcf2png
+is a command-line tool that converts image files in the XCF format used by
+.BR gimp (1)
+to the generic image format
+.BR png ,
+flattening layers if necessary. It does not need to have
+the Gimp engine itself available.
+.SH GENERAL OPTIONS
+.TP 8
+\fB\-A\fR, \fB--force-alpha\fR
+Invent a trivial alpha channel even if the flattened image is
+completely opaque.
+.TP 8
+\fB\-b\fR \fIcolor\fR, \fB--background\fR \fIcolor\fR
+Use this color for transparent pixels in the image.
+The color can be given as
+.B #rrggbb
+or
+.B #rgb
+hexadecimal values,
+or as an X11 color name
+(which will only work if a color name database can be found
+in one of a number of standard locations).
+.TP 8
+\fB\-c\fR, \fB--color\fR, \fB--colour\fR
+Force the output to use RGB color space even if it there are
+more compact alternatives.
+.TP 8
+\fB\-C\fR, \fB--autocrop\fR
+Set the converted part of the image such that it just include
+the boundaries of the visible (or selected) layers.
+This may make it either smaller or larger than the canvas,
+depending on the position and size of the visible layers.
+(Note that the
+.I contents
+of the layers is not taken into account when autocropping).
+.IP
+In the absence of options that specify otherwise, the converted
+image will cover the entire XCF canvas.
+.TP 8
+\fB\-D\fR, \fB--dissolve\fR
+Do a "dissolve" step to eliminate partial transparency after
+flattening.
+If
+.B \-b
+is also given, this happens before the background color is applied.
+.TP 8
+\fB\-f\fR, \fB--full-image\fR
+First flatten the entire image to a memory buffer before writing
+output. Then analyse the image to decide on the details of the
+output format (e.g., whether a grayscale output is sufficient).
+Without this option, the program flattens only a singe row of "tiles"
+(height 64) at a time.
+.TP 8
+\fB\-g\fR, \fB--gray\fR, \fB--grey\fR
+Force the output to be a grayscale image even if it may be monochrome.
+If any colored pixels are encountered, exit with status 103.
+This will be selected automatically if the output file's name
+ends with
+.BR .pgm .
+.TP 8
+\fB\-G\fR, \fB--for-gif\fR
+Assert that the flattened image will have no partial transparency
+(allowing a more compact representation of the alpha output).
+Exit with status 102 if the flattened image has any partial
+transparency.
+If
+.B \-b
+is also given, this tests whether there there is partial
+transparency before applying the background color.
+.TP 8
+\fB\-h\fR, \fB--help\fR
+Print an option summery to standard output and exit with a
+return code of 0.
+.TP 8
+\fB\-j\fR, \fB--bzip\fR
+Equivalent to
+.BR "\-Z bzcat" .
+Default if the filename ends with
+.BR bz2 .
+.TP 8
+\fB\-o\fR \fIfilename\fR, \fB--output\fR \fIfilename\fR
+Write the converted picture to
+.I filename
+instead of to standard output.
+.TP 8
+\fB\-O\fR \fIx\fB,\fPy\fR, \fB--offset\fR \fIx\fB,\fPy\fR
+Offset the converted part of the image from the top-left corner
+of the XCF canvas. Usually used with
+.BR \-S .
+.TP 8
+\fB\-S\fR \fIw\fBx\fPh\fR, \fB--size\fR \fIw\fBx\fPh\fR
+Crop the converted image to width \fIw\fP and height \fIh\fP.
+.TP 8
+\fB\-T\fR, \fB--truecolor\fR
+Use standard RGB compositing for flattening indexed layers.
+Without this option,
+.B \*p
+will mimic the Gimp's current strategy of rounding each
+alpha value to either full transparency or full opacity,
+and interpret all layer modes as
+.BR Normal .
+.TP 8
+\fB\-u\fR, \fB--utf8\fR
+Use the raw UTF-8 representation from the XCF file to compare
+and display layer names.
+Ordinarily, layer names will be converted to the character set
+of the current locale.
+.TP 8
+\fB\-v\fR, \fB--verbose\fR
+Print progress messages about the conversion to standard error.
+.TP 8
+\fB\-V\fR, \fB--version\fR
+Print the version numer of
+.B xcftools
+to standard output and exit with a return code of 0.
+.TP 8
+\fB\-z\fR, \fB--gzip\fR
+Equivalent to
+.BR "\-Z zcat" .
+Default if the filename ends with
+.BR gz .
+.TP 8
+\fB\-Z\fR \fIcommand\fR, \fB--unpack\fR \fIcommand\fR
+Specify a command that the input file is filtered through
+before being interpreted as an XCF file. The command is invoked as
+.I command filename
+and must produce output to its standard output.
+Note that it is not possible to specify arguments as part of
+.IR command .
+An uncompressor is selected automatically if the filename ends
+with
+.B gz
+or
+.BR bz2 ;
+to suppress this, use
+.B \-Z cat
+(which is implemented without actually starting a
+.BR cat (1)
+process).
+.P
+Several groups of options are mutually incompatible; in each group the
+one given last will win:
+.TP 4
+1)
+.B \-A
+and
+.BR \-b .
+.TP
+2)
+.B \-g
+and
+.B \-c .
+.TP
+3)
+.B \-D
+and
+.BR \-G .
+.TP
+4)
+.BR \-j ,
+.BR \-z ,
+and
+.BR \-Z .
+.TP
+5)
+.B \-C
+and
+.BR \-O / \-S .
+.SH LAYER SPECIFICATIONS
+If no
+.I layer name
+is given on the command line, all of the visible layers in
+the XCF file are merged to produce the output image.
+It is also possible to specify the layers to merge explicitly,
+by giving their names as separate arguments after the
+input filename. In that case, the output will contain
+.I only
+the named layers. The layers will be merged in the order
+they appear on the command line, with the leftmost being
+"at the bottom" \- that is, the layer ordering in the XCF file
+will be ignored.
+.P
+The following options can be given
+.I after
+a layer name to override the global properties of the layer:
+.TP 8
+\fB--mask\fR
+Enable the layer mask.
+.TP 8
+\fB--mode\fR \fImode\fR
+Set the layer mode (e.g.,
+.B Normal
+or
+.BR Multiply ).
+.TP 8
+\fB--nomask\fR
+Disable the layer mask.
+.TP 8
+\fB--opacity\fR \fIn\fR
+Set the opacity on a scale from 0 to 255 (as used internally)
+.TP 8
+\fB--percent\fR \fIn\fR
+Set the opacity on a scale from 0 to 100
+(as in the Gimp user interface).
+.SH EXIT STATUS
+The exit status of
+.B \*p
+is
+.TP 5
+0
+Success
+.TP
+20
+.\"---
+Problems parsing the command line, including unknown color names
+(or missing color name directory) for
+.BR \-b .
+.\"---
+.TP
+21
+The specified XCF file does not exist or cannot be read.
+.\"---
+.TP
+22
+A layer named on the command line was not found, or the
+.B --mask
+option was used for a layer that has no layer mask.
+.\"---
+.\"---
+.TP
+102
+The
+.B \-G
+option was given, yet partial transparency was found.
+.TP
+103
+.\"---
+.B \-g
+was given, yet colored pixels were found.
+.\"---
+.\"---
+.TP
+123
+The XCF file contains presumably valid features that
+.B xcftools
+does not support.
+(As of this writing there is no known way of getting the Gimp to write
+an XCF file that will provoke this return. Please notify the author if you
+discover one).
+.TP
+125
+The XCF file is malformed.
+.TP
+126
+An uncompression program could not be executed, or terminated
+abnormally.
+.TP
+127
+Unexpected I/O error, internal errors, or other "this can't happen"
+situations.
+.P
+If an uncompression program returns an error exit status, this will
+be returned from
+.B \*p
+too.
+.SH BUGS AND LIMITATIONS
+.P
+When several partially transparent layers are merged, the pixel
+values are interpolated without gamma correction. (The Gimp also
+does it this way). Some slight rounding errors in the interpolation
+are inevitable;
+.B \*p
+sometimes has different rounding errors than the Gimp itself,
+especially when more than two layers are involved, or in case of
+some of the more exotic layer modes.
+These differences are usually not visible to the eye.
+.P
+Floating selections are currently not handled correctly.
+.P
+There are probably other bugs lurking in corner cases. If you discover
+one, please notify the author.
+
+.SH FILES
+.TP 8
+.B /etc/X11/rgb.txt
+.TP 8
+.B /usr/share/X11/rgb.txt
+.TP 8
+.B /usr/lib/X11/rgb.txt
+Color name database for
+.BR \-b .
+.SH AUTHOR
+.B \*p
+was written by Henning Makholm <henning@makholm.net>.
+.P
+.SH SEE ALSO
+.BR xcfinfo (1),
+.BR xcf2pnm (1)

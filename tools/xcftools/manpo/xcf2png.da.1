@@ -1,0 +1,249 @@
+.\" Manual page for xcf2png
+.\" This file was written by Henning Makholm <henning@makholm.net>
+.\" It is hereby in the public domain.
+.\" 
+.\" In jurisdictions that do not recognise grants of copyright to the
+.\" public domain: I, the author and (presumably, in those jurisdictions)
+.\" copyright holder, hereby permit anyone to distribute and use this code,
+.\" in source code or binary form, with or without modifications. This
+.\" permission is world-wide and irrevocable.
+.\"
+.\" Of course, I will not be liable for any errors or shortcomings in the
+.\" code, since I give it away without asking any compenstations.
+.\"
+.\" If you use or distribute this code, I would appreciate receiving
+.\" credit for writing it, in whichever way you find proper and customary.
+.TH xcf2png 1 2006-02-12 "Xcftools" ""
+.SH NAVN
+xcf2png \- oversæt xcf\-filer til png\-format
+.ds p xcf2png
+.SH OVERBLIK
+\fB\*p\fP [ \fIflag\fP ] \fIfilnavn\fP [ \fIlagnavne\fP ]
+.SH BESKRIVELSE
+\fBxcf2png\fP er et kommandolinjeværktøj til at fladgøre og
+konvertere billedfiler i \fBgimp\fP(1)s interne format XCF til
+det generelle billedformat \fBpng\fP.
+Det kræver ikke at Gimp selv er installeret.
+.SH ALMINDELIGE FLAG
+.TP 8
+\fB\-A\fR, \fB--force-alpha\fR
+Konstruér en triviel gennemsigtighedskanal selvom billedet er
+fuldstændig ugennemsigtigt.
+.TP 8
+\fB\-b\fR \fIfarve\fR, \fB--background\fR \fIfarve\fR
+Giv gennemsigtige partier af billedet denne farve.
+Baggrundsfarven kan angives hexadecimalt som \fB#rrggbb\fP eller
+\fB#rgb\fP, eller med et X11\-farvenavn (sidstnævnte virker kun
+hvis der kan findes en database med farvenavne i en standardplacering).
+.TP 8
+\fB\-c\fR, \fB--color\fR, \fB--colour\fR
+Brug RGB\-format for uddata selvom der er mere kompakte
+alternative formater.
+.TP 8
+\fB\-C\fR, \fB--autocrop\fR
+Placer det konvertede område af billedet til så det netop dækker alle
+de synlige (eller valgte) lag.
+Billedet kan blive større eller mindre end lærredet, afhængigt af
+de synlige lags størrelse og placering.
+(Bemærk at tilskæringen ikke tager hensyn til
+\fIindholdet\fP af lagene).
+.IP
+Normalt vil det konverterede område være det samme som XCF\-lærredet.
+.TP 8
+\fB\-D\fR, \fB--dissolve\fR
+Foretag et "opløs"\-skridt for at udrydde delvis gennemsigtighed
+i det fladgjorte billede.
+Hvis \fB\-b\fP\-flaget også gives, sker dette før baggrundsfarven påføres.
+.TP 8
+\fB\-f\fR, \fB--full-image\fR
+Start med at fladgøre hele billedet til RAM, og analysér så billedet
+før detaljerne i uddataformatet bliver besluttet (fx om gråtoner
+er tilstrækkeligt til at repræsentere billeder).
+Hvis dette flag ikke gives, vil programmet nøjes med at fladgøre
+en enkelt række "fliser" (af højden 64 pixels) ad gangen.
+.TP 8
+\fB\-g\fR, \fB--gray\fR, \fB--grey\fR
+Repræsentér uddata som gråtoner selv hvis det er rent sort/hvidt.
+Stop med afslutningskode 103 hvis der mødes nogen farvede pixels.
+Dette bliver valgt automatisk hvis uddatafilens navn ender på \fB.pgm\fP.
+.TP 8
+\fB\-G\fR, \fB--for-gif\fR
+Påstå at der ikke er nogen delvist gennemsigtige pixels i uddata
+(hvilket muliggør en effektivere repræsentation af gennemsigtighed
+i uddata).
+Stop med afslutningskode 102 hvis der alligevel findes nogen
+delvist gennemsigtige pixels.
+Hvis \fB\-b\fP\-flaget også gives, handler denne test om om der er
+delvist gennemsigtige pixels \fIover\fP den angivne baggrund.
+.TP 8
+\fB\-h\fR, \fB--help\fR
+Udskriv en oversigt over flag og kommandolinjesyntaks,
+og afslut med kode 0.
+.TP 8
+\fB\-j\fR, \fB--bzip\fR
+Gør det samme som \fB\-Z bzcat\fP.
+Vælges automatisk hvis filnavnet slutter med \fBbz2\fP.
+.TP 8
+\fB\-o\fR \fIfilnavn\fR, \fB--output\fR \fIfilnavn\fR
+Skriv det konverterede billede til \fIfilnavn\fP i stedet for
+til standarduddata.
+.TP 8
+\fB\-O\fR \fIx\fB,\fPy\fR, \fB--offset\fR \fIx\fB,\fPy\fR
+Forskyd det konverterede billede fra det øverste venstre
+hjørne af XCF\-lærredet. Bruges normalt sammen med \fB\-S\fP.
+.TP 8
+\fB\-S\fR \fIb\fBx\fPh\fR, \fB--size\fR \fIb\fBx\fPh\fR
+Beskær det konverterede billede til bredde \fIb\fP og højde \fIb\fP.
+.TP 8
+\fB\-T\fR, \fB--truecolor\fR
+Brug fuldt RGB\-farverum til at fladgøre indekserede billeder.
+Hvis dette flag \fIikke\fP gives, vil \fB\*p\fP efterligne Gimps nuværende
+princip, hvor gennemsigtigheden af hver pixel afrundes til enten
+"helt gennemsigtig" eller "helt ugennemsigtig", og fortolke alle
+lagtilstande som \fBNormal\fP.
+.TP 8
+\fB\-u\fR, \fB--utf8\fR
+Brug den rå UTF-8\-repræsentation fra XCF\-filen til at sammenligne
+og vise lagnavne.
+Normalt forsøger programmet at transkribere lagnavnene til det
+tegnsæt der angives af lokalitetsinstillingen.
+.TP 8
+\fB\-v\fR, \fB--verbose\fR
+Giv fremgangsbeskeder til standardfejl undervejs.
+.TP 8
+\fB\-V\fR, \fB--version\fR
+Skriv versionsnummeret for \fBxcftools\fP til standarduddata,
+og afslut med kode 0.
+.TP 8
+\fB\-z\fR, \fB--gzip\fR
+Gør det samme som \fB\-Z zcat\fP.
+Vælges automatisk hvis filnavnet slutter med \fBgz\fP.
+.TP 8
+\fB\-Z\fR \fIkommando\fR, \fB--unpack\fR \fIkommando\fR
+Angiv en kommando som inddatafilen skal behandles af før den kan
+fortolkes som XCF\-fil. Kommandoen bliver startet som \fIkommando
+filnavn\fP, og skal skrive sit resultat til standarduddata.
+Bemærk at \fIkommando\fP ikke kan indeholde argumenter.
+Hvis filnavnet ender på \fBgz\fP eller \fBbz2\fP, vil et udpakkeprogram
+blive valgt automatisk; dette kan slås fra ved at angive
+\fB\-Z cat\fP (hvilket bliver optimeret så der ikke faktisk bliver
+startet end \fBcat\fP(1)\-proces).
+.P
+Visse grupper af flag udelukker gensidigt hinanden.
+I hver af de følgende grupper vil det sidst givne flag vinde:
+.TP 4
+1)
+\fB\-A\fP og \fB\-b\fP.
+.TP
+2)
+\fB\-g\fP og \fB\-c\fP.
+.TP
+3)
+\fB\-D\fP og \fB\-G\fP.
+.TP
+4)
+\fB\-j\fP, \fB\-z\fP og \fB\-Z\fP.
+.TP
+5)
+\fB\-C\fP og \fB\-O\fP/\fB\-S\fP.
+.SH VALG AF LAG
+Hvis kommandolinjen ikke indeholder noget \fIlagnavn\fP, bliver
+alle de synlige lag i XCF\-filen fladgjort til et enkelt
+uddatabillede.
+Man kan også vælge de lag der skal kombineres, udtrykkeligt ved
+at angive deres navne som selvstændige kommandolinjeargumenter
+efter navnet  på inddatafilen. I det tilfælde vil uddata
+\fIkun\fP indeholde de angivne lag. Lagene vil blive kombineret i den
+rækkefølge de står på kommandolinjen, med det lag der står længst
+til venstre, som det "nederste" \- det vil sige at den indbyrdes
+position i XCF filen ikke betyder noget.
+.P
+De følgende flag kan gives \fIefter\fP et lagnavn for at tilsidesætte
+lagets globale egenskaber:
+.TP 8
+\fB--mask\fP
+Aktivér lagmasken.
+.TP 8
+\fB--mode\fP \fImode\fP
+Vælg lagtilstanden (fx \fBNormal\fP eller \fBLægTil\fP).
+.TP 8
+\fB--nomask\fP
+Deaktivér lagmasken.
+.TP 8
+\fB--opacity\fP \fIn\fP
+Vælg gennemsigtighed på en skala fra 0 (helt gennemsigtigt)
+til 255 (helt ugennemsigtig).
+.TP 8
+\fB--percent\fP \fIn\fP
+Vælg gennemsigtighed på en skala fra 0 (helt gennemsigtigt)
+til 100 (helt ugennemsigtig).
+.SH AFSLUTNINGSKODER
+Her er de mulige afslutningskoder fra \fB\*p\fP:
+.TP 5
+0
+Alt OK
+.TP
+20
+Gal kommandolinjesyntaks, herunder ukendte farvenavne i
+\fB\-B\fP (eller farvenavnsdatabasen mangler).
+.TP
+21
+Den angivne XCF\-fil findes ikke eller kan ikke læses.
+.TP
+22
+Et lag der angives på kommandolinjen findes ikke, eller
+\fB--mask\fP\-flaget er anvendt på et lag der ikke har nogen lagmaske.
+.TP
+102
+\fB\-G\fP\-flaget er givet, men billedet indeholder delvist gennemsigtige
+pixels.
+.TP
+103
+\fB\-g\fP\-flaget er givet, men billedet indeholder farvede pixels.
+.TP
+123
+XCF\-filen indeholder egenskaber som \fBxcftools\fP ikke forstår.
+(Der er så vidt vides ingen måde at få Gimp til at skrive
+en XCF\-fil som medfører denne aflutningskode. Lad venligst
+forfatteren vide det hvis du opdager én).
+.TP
+125
+XCF\-filen er beskadiget eller ugyldig.
+.TP
+126
+Det lykkedes ikke at udføre udpakkeprogrammet (eller det blev dræbt
+undervejs).
+.TP
+127
+Uventet I/O\-fejl, interne fejl og lignede "umulige" situationer.
+.P
+Hvis et udpakkeprogram stopper med en fejlkode, bliver denne
+kode også \fB\*p\fPs afslutningskode.
+.SH FEJL OG BEGRÆNSNINGER
+.P
+Når flere delvist gennemsigtige lag skal kombineres, bliver
+pixelværdierne kombineret uden gammakorrektion. (Sådan gør Gimp
+det også). Ved kombinationen vil der uvægerligt opstå mindre
+afrundingsfejl \- nogen gange giver \fB\*p\fP andre fejl end
+Gimp selv, især når der er tale om mere end to lag, eller
+ved nogen af de mere eksotiske lagtilstande.
+Disse forskelle er normalt ikke synlige.
+.P
+Flydende markeringer bliver p.t. ikke behandlet korrekt.
+.P
+Der er sikkert også andre fejl som viser sig i særlige situationer.
+Hvis du finder en, så vær rar at fortælle forfatteren om den.
+.SH FILER
+.TP 8
+\fB/etc/X11/rgb.txt\fP
+.TP 8
+\fB/usr/share/X11/rgb.txt\fP
+.TP 8
+\fB/usr/lib/X11/rgb.txt\fP
+Database med farvenavne der forstås af \fB\-b\fP.
+.SH FORFATTER
+\fB\*p\fP og denne manualside
+er skrevet af Henning Makholm <henning@makholm.net>.
+.P
+.SH SE OGSÅ
+\fBxcfinfo\fP(1), \fBxcf2pnm\fP(1)

@@ -1,0 +1,138 @@
+.\" Manual page for xcfinfo
+.\" This file was written by Henning Makholm <henning@makholm.net>
+.\" It is hereby in the public domain.
+.\" 
+.\" In jurisdictions that do not recognise grants of copyright to the
+.\" public domain: I, the author and (presumably, in those jurisdictions)
+.\" copyright holder, hereby permit anyone to distribute and use this code,
+.\" in source code or binary form, with or without modifications. This
+.\" permission is world-wide and irrevocable.
+.\"
+.\" Of course, I will not be liable for any errors or shortcomings in the
+.\" code, since I give it away without asking any compenstations.
+.\"
+.\" If you use or distribute this code, I would appreciate receiving
+.\" credit for writing it, in whichever way you find proper and customary.
+.TH xcfinfo 1 2006-02-12 "Xcftools" ""
+.SH NAVN
+xcfinfo \- vis oplysninger om xcf\-filer fra GIMP
+.ds p xcfinfo
+.SH OVERBLIK
+\fB\*p\fP [ \fIflag\fP ] \fIfilnavn\fP
+.SH BESKRIVELSE
+\fBxcfinfo\fP er et kommandolinjeværktøj til at vise oplysninger om
+indholdet af billedfiler i XCF\-formatet som bruges af \fBgimp\fP(1),
+især vedførende billedets lag.
+.SH FLAG
+.TP 8
+\fB\-h\fR, \fB--help\fR
+Udskriv en oversigt over flag og kommandolinjesyntaks,
+og afslut med kode 0.
+.TP 8
+\fB\-j\fR, \fB--bzip\fR
+Gør det samme som \fB\-Z bzcat\fP.
+Vælges automatisk hvis filnavnet slutter med \fBbz2\fP.
+.TP 8
+\fB\-p\fR \fIstring\fR, \fB--path-separator\fR \fIstring\fR
+This string will be used to separate the name of the containing
+groups when manipulating layers.
+.TP 8
+\fB\-u\fR, \fB--utf8\fR
+Brug den rå UTF-8\-repræsentation fra XCF\-filen til at sammenligne
+og vise lagnavne.
+Normalt forsøger programmet at transkribere lagnavnene til det
+tegnsæt der angives af lokalitetsinstillingen.
+.TP 8
+\fB\-v\fR, \fB--verbose\fR
+Giv fremgangsbeskeder til standardfejl undervejs.
+.TP 8
+\fB\-V\fR, \fB--version\fR
+Skriv versionsnummeret for \fBxcftools\fP til standarduddata,
+og afslut med kode 0.
+.TP 8
+\fB\-z\fR, \fB--gzip\fR
+Gør det samme som \fB\-Z zcat\fP.
+Vælges automatisk hvis filnavnet slutter med \fBgz\fP.
+.TP 8
+\fB\-Z\fR \fIkommando\fR, \fB--unpack\fR \fIkommando\fR
+Angiv en kommando som inddatafilen skal behandles af før den kan
+fortolkes som XCF\-fil. Kommandoen bliver startet som \fIkommando
+filnavn\fP, og skal skrive sit resultat til standarduddata.
+Bemærk at \fIkommando\fP ikke kan indeholde argumenter.
+Hvis filnavnet ender på \fBgz\fP eller \fBbz2\fP, vil et udpakkeprogram
+blive valgt automatisk; dette kan slås fra ved at angive
+\fB\-Z cat\fP (hvilket bliver optimeret så der ikke faktisk bliver
+startet end \fBcat\fP(1)\-proces).
+.SH UDDATA
+Oplysninger om billedet bliver udskrevet til standarduddata i et
+fast format.
+Første linje indeholder generelle oplysninger om XCF\-filen:
+.TP 3
+\-
+Versionen af filformatet
+.TP
+\-
+Størrelsen af lærredet
+.TP
+\-
+Billedtilstanden (farver, gråtoner eller indekseret)
+.TP
+\-
+Antal lag
+.TP
+\-
+Den interne komprimeringsalgoritme
+.P
+Efter denne linje følger én linje for hvert lag:
+.TP 3
+1)
+Tegnet \fB+\fP hvis laget er synligt, \fB\-\fP ellers
+.TP
+2)
+Lagets størrelse og position
+.TP
+3)
+Lagets pixelformat, herunder om laget har en alfakanal.
+.TP
+4)
+Lagtilstanden, samt ugennemsigtigheden (hvis den ikke er 100%), og
+\fB/mask\fP hvis laget har en aktiv lagmaske.
+.TP
+5)
+Lagets navn.
+.SH AFSLUTNINGSKODER
+Her er de mulige afslutningskoder fra \fB\*p\fP:
+.TP 5
+0
+Alt OK
+.TP
+20
+Gal kommandolinjesyntaks.
+.TP
+21
+Den angivne XCF\-fil findes ikke eller kan ikke læses.
+.TP
+123
+XCF\-filen indeholder egenskaber som \fBxcftools\fP ikke forstår.
+(Der er så vidt vides ingen måde at få Gimp til at skrive
+en XCF\-fil som medfører denne aflutningskode. Lad venligst
+forfatteren vide det hvis du opdager én).
+.TP
+125
+XCF\-filen er beskadiget eller ugyldig.
+.TP
+126
+Det lykkedes ikke at udføre udpakkeprogrammet (eller det blev dræbt
+undervejs).
+.TP
+127
+Uventet I/O\-fejl, interne fejl og lignede "umulige" situationer.
+.P
+Hvis et udpakkeprogram stopper med en fejlkode, bliver denne
+kode også \fB\*p\fPs afslutningskode.
+.SH FORFATTER
+\fB\*p\fP og denne manualside
+er skrevet af Henning Makholm <henning@makholm.net>.
+.P
+.SH SE OGSÅ
+\fBxcf2pnm\fP(1), \fBxcf2png\fP(1)

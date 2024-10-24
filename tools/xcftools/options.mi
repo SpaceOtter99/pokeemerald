@@ -1,0 +1,193 @@
+#line 22 "options.i"
+Print an option summery to standard output and exit with a
+return code of 0.
+#line 29 "options.i"
+Print the version numer of
+.B xcftools
+to standard output and exit with a return code of 0.
+#line 37 "options.i"
+Print progress messages about the conversion to standard error.
+#line 43 "options.i"
+Equivalent to
+.BR "\-Z bzcat" .
+Default if the filename ends with
+.BR bz2 .
+#line 52 "options.i"
+.TP
+\fB\-X\fR \fIstring\fR
+#line 53 "options.i"
+This string will be used to separate the name of the containing groups
+when manipulating layers.
+#line 61 "options.i"
+Equivalent to
+.BR "\-Z zcat" .
+Default if the filename ends with
+.BR gz .
+#line 69 "options.i"
+.TP
+\fB\-X\fR \fIcommand\fR
+#line 70 "options.i"
+Specify a command that the input file is filtered through
+before being interpreted as an XCF file. The command is invoked as
+.I command filename
+and must produce output to its standard output.
+Note that it is not possible to specify arguments as part of
+.IR command .
+An uncompressor is selected automatically if the filename ends
+with
+.B gz
+or
+.BR bz2 ;
+to suppress this, use
+.B \-Z cat
+(which is implemented without actually starting a
+.BR cat (1)
+process).
+#line 92 "options.i"
+.TP
+\fB\-X\fR \fIfilename\fR
+#line 93 "options.i"
+Write the converted picture to
+.I filename
+instead of to standard output.
+#line 101 "options.i"
+.TP
+\fB\-X\fR \fIfilename\fR
+#line 102 "options.i"
+Output a transparency mask for the flattened image to
+.I filename
+as a
+.BR pgm (5)
+file, in addition to the ordinary output.
+If the flattened image is completely opaque, this will produce an
+error message and exit status 101;
+use
+.B \-A
+to suppress this.
+#line 117 "options.i"
+.TP
+\fB\-X\fR \fIcolor\fR
+#line 118 "options.i"
+Use this color for transparent pixels in the image.
+The color can be given as
+.B #rrggbb
+or
+.B #rgb
+hexadecimal values,
+or as an X11 color name
+(which will only work if a color name database can be found
+in one of a number of standard locations).
+#line 189 "options.i"
+Invent a trivial alpha channel even if the flattened image is
+completely opaque.
+#line 196 "options.i"
+Force the output to use RGB color space even if it there are
+more compact alternatives.
+#ifdef XCF2PNM
+This will be selected automatically if the output file's name
+ends with
+.BR .ppm .
+#endif
+#line 208 "options.i"
+Force the output to be a grayscale image even if it may be monochrome.
+If any colored pixels are encountered, exit with status 103.
+This will be selected automatically if the output file's name
+ends with
+.BR .pgm .
+#line 219 "options.i"
+Force the output to be a monochrome image.
+If any colors except black and white are encountered, exit with
+status 103.
+This will be selected automatically if the output file's name
+ends with
+.BR .pbm .
+#line 232 "options.i"
+Suppress the automatic choice of
+.BR \-c ,
+.BR \-g ,
+or
+.BR \-m
+based on output filename, and instead select the output format
+based on image contents.
+This is the default if the filename is not recognized, and
+when writing to stdout.
+#line 247 "options.i"
+Use standard RGB compositing for flattening indexed layers.
+Without this option,
+.B \*p
+will mimic the Gimp's current strategy of rounding each
+alpha value to either full transparency or full opacity,
+and interpret all layer modes as
+.BR Normal .
+#line 259 "options.i"
+Assert that the flattened image will have no partial transparency
+(allowing a more compact representation of the alpha output).
+Exit with status 102 if the flattened image has any partial
+transparency.
+If
+.B \-b
+is also given, this tests whether there there is partial
+transparency before applying the background color.
+#line 272 "options.i"
+Do a "dissolve" step to eliminate partial transparency after
+flattening.
+If
+.B \-b
+is also given, this happens before the background color is applied.
+#line 282 "options.i"
+First flatten the entire image to a memory buffer before writing
+output. Then analyse the image to decide on the details of the
+output format (e.g., whether a grayscale output is sufficient).
+Without this option, the program flattens only a singe row of "tiles"
+(height 64) at a time.
+#line 291 "options.i"
+.TP
+\fB\-X\fR \fIw\fBx\fPh\fR
+#line 292 "options.i"
+Crop the converted image to width \fIw\fP and height \fIh\fP.
+#line 308 "options.i"
+.TP
+\fB\-X\fR \fIx\fB,\fPy\fR
+#line 309 "options.i"
+Offset the converted part of the image from the top-left corner
+of the XCF canvas. Usually used with
+.BR \-S .
+#line 328 "options.i"
+Set the converted part of the image such that it just include
+the boundaries of the visible (or selected) layers.
+This may make it either smaller or larger than the canvas,
+depending on the position and size of the visible layers.
+(Note that the
+.I contents
+of the layers is not taken into account when autocropping).
+.IP
+In the absence of options that specify otherwise, the converted
+image will cover the entire XCF canvas.
+#line 346 "options.i"
+.TP
+\fB\-X\fR \fImode\fR
+#line 347 "options.i"
+Set the layer mode (e.g.,
+.B Normal
+or
+.BR Multiply ).
+#line 369 "options.i"
+.TP
+\fB\-X\fR \fIn\fR
+#line 370 "options.i"
+Set the opacity on a scale from 0 to 100
+(as in the Gimp user interface).
+#line 383 "options.i"
+.TP
+\fB\-X\fR \fIn\fR
+#line 384 "options.i"
+Set the opacity on a scale from 0 to 255 (as used internally)
+#line 398 "options.i"
+Enable the layer mask.
+#line 404 "options.i"
+Disable the layer mask.
+#line 415 "options.i"
+Use the raw UTF-8 representation from the XCF file to compare
+and display layer names.
+Ordinarily, layer names will be converted to the character set
+of the current locale.
