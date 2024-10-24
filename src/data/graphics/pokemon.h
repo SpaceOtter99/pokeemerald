@@ -10526,8 +10526,8 @@ const u32 gObjectEventPic_Substitute[] = INCBIN_COMP("graphics/pokemon/question_
 #if OW_POKEMON_OBJECT_EVENTS
     const u32 gObjectEventPic_HippopotasRegional[] = INCBIN_COMP("graphics/pokemon/hippopotas/overworld.4bpp");
 #if OW_PKMN_OBJECTS_SHARE_PALETTES == FALSE
-    const u32 *gOverworldPalette_HippopotasRegional = gMonPalette_HippopotasRegional;
-    const u32 *gShinyOverworldPalette_HippopotasRegional = gMonShinyPalette_HippopotasRegional;
+    const u32 gOverworldPalette_HippopotasRegional[] = INCBIN_U32("graphics/pokemon/hippopotas/regional/normal.gbapal.lz");
+    const u32 gShinyOverworldPalette_HippopotasRegional[] = INCBIN_U32("graphics/pokemon/hippopotas/regional/shiny.gbapal.lz");
 #endif //OW_PKMN_OBJECTS_SHARE_PALETTES
 #endif //OW_POKEMON_OBJECT_EVENTS
 

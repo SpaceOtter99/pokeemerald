@@ -2920,6 +2920,14 @@ static const struct SpriteFrameImage sPicTable_Hippopotas[] = {
 static const struct SpriteFrameImage sPicTable_HippopotasF[] = {
     overworld_ascending_frames(gObjectEventPic_HippopotasF, 4, 4),
 };
+#if P_CUSTOM_FORMS
+static const struct SpriteFrameImage sPicTable_HippopotasRegional[] = {
+    overworld_ascending_frames(gObjectEventPic_HippopotasRegional, 4, 4),
+};
+static const struct SpriteFrameImage sPicTable_HippopotasRegionalF[] = {
+    overworld_ascending_frames(gObjectEventPic_HippopotasRegionalF, 4, 4),
+};
+#endif
 static const struct SpriteFrameImage sPicTable_Hippowdon[] = {
     overworld_ascending_frames(gObjectEventPic_Hippowdon, 4, 4),
 };

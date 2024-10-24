@@ -4123,7 +4123,7 @@ const struct SpeciesInfo gSpeciesInfoGen4[] =
     },
 
 #if P_CUSTOM_FORMS
-[SPECIES_HIPPOPOTAS] =
+[SPECIES_HIPPOPOTAS_REGIONAL] =
     {
         .baseHP        = 78,
         .baseAttack    = 31,
@@ -4176,9 +4176,9 @@ const struct SpeciesInfo gSpeciesInfoGen4[] =
         .iconSpriteFemale = gMonIcon_HippopotasRegionalF,
         .iconPalIndexFemale = 1,
     #endif
-        FOOTPRINT(Hippopotas)
+        FOOTPRINT(HippopotasRegional)
         OVERWORLD(
-            sPicTable_Hippopotas,
+            sPicTable_HippopotasRegional,
             SIZE_32x32,
             SHADOW_SIZE_M,
             TRACKS_FOOT,

@@ -10509,6 +10509,24 @@ static const struct LevelUpMove sHippopotasLevelUpLearnset[] = {
     LEVEL_UP_END
 };
 
+#if P_CUSTOM_FORMS
+static const struct LevelUpMove sHippopotasRegionalLevelUpLearnset[] = {
+    LEVEL_UP_MOVE( 1, MOVE_ASTONISH),
+    LEVEL_UP_MOVE( 1, MOVE_SCARY_FACE),
+    LEVEL_UP_MOVE( 7, MOVE_BITE),
+    LEVEL_UP_MOVE(13, MOVE_HYPNOSIS),
+    LEVEL_UP_MOVE(15, MOVE_FAKE_OUT),
+    LEVEL_UP_MOVE(19, MOVE_HEX),
+    LEVEL_UP_MOVE(21, MOVE_ANCIENT_POWER),
+    LEVEL_UP_MOVE(25, MOVE_ROCK_TOMB),
+    LEVEL_UP_MOVE(30, MOVE_CRUNCH),
+    LEVEL_UP_MOVE(37, MOVE_EARTHQUAKE),
+    LEVEL_UP_MOVE(44, MOVE_SHADOW_BALL),
+    LEVEL_UP_MOVE(50, MOVE_PERISH_SONG),
+    LEVEL_UP_END
+};
+#endif //P_CUSTOM_FORMS
+
 static const struct LevelUpMove sHippowdonLevelUpLearnset[] = {
     LEVEL_UP_MOVE( 1, MOVE_ICE_FANG),
     LEVEL_UP_MOVE( 1, MOVE_FIRE_FANG),
