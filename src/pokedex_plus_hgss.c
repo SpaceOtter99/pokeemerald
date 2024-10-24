@@ -668,7 +668,7 @@ static const struct SpriteTemplate sStatBarBgSpriteTemplate =
 enum
 {
     COLOR_ID_ALPHA,
-    COLOR_ID_BAR_WHITE,
+    COLOR_ID_BAR_BLACK,
     // These are repeated 6 times
     COLOR_ID_FILL,
     COLOR_ID_FILL_SHADOW,
@@ -687,7 +687,7 @@ enum
 static const u8 sStatBarsGfx[] = INCBIN_U8("graphics/pokedex/hgss/stat_bars.4bpp");
 static const u16 sStatBarPalette[16] = {
     [COLOR_ID_ALPHA] = RGB(0, 0, 10),
-    [COLOR_ID_BAR_WHITE] = RGB_WHITE,
+    [COLOR_ID_BAR_BLACK] = RGB_BLACK,
 
     [COLOR_ID_FILL + COLOR_BEST * 2] = RGB(2, 25, 25),
     [COLOR_ID_FILL_SHADOW + COLOR_BEST * 2] = RGB(13, 27, 27),
@@ -707,8 +707,8 @@ static const u16 sStatBarPalette[16] = {
     [COLOR_ID_FILL + COLOR_WORST * 2] = RGB(25, 4, 2),
     [COLOR_ID_FILL_SHADOW + COLOR_WORST * 2] = RGB(27, 15, 13),
 
-    [COLOR_ID_FONT] = RGB_BLACK,
-    [COLOR_ID_FONT_SHADOW] = RGB(22, 22, 22),
+    [COLOR_ID_FONT] = RGB_WHITE,
+    [COLOR_ID_FONT_SHADOW] = RGB(11, 11, 11),
 };
 static const struct SpritePalette sStatBarSpritePal[] = //{sStatBarPalette, TAG_STAT_BAR};
 {
@@ -3562,27 +3562,27 @@ static void CreateStatBar(u8 *dst, u32 y, u32 width)
     }
 
     // white pixes left side
-    WritePixel(dst, STAT_BAR_X_OFFSET, y + 0, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET, y + 1, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET, y + 2, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET, y + 3, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET, y + 4, COLOR_ID_BAR_WHITE);
+    WritePixel(dst, STAT_BAR_X_OFFSET, y + 0, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET, y + 1, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET, y + 2, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET, y + 3, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET, y + 4, COLOR_ID_BAR_BLACK);
 
     // white pixels right side
-    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 0, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 1, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 2, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 3, COLOR_ID_BAR_WHITE);
-    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 4, COLOR_ID_BAR_WHITE);
+    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 0, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 1, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 2, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 3, COLOR_ID_BAR_BLACK);
+    WritePixel(dst, STAT_BAR_X_OFFSET + width - 1, y + 4, COLOR_ID_BAR_BLACK);
 
     // Fill
     for (i = 1; i < width - 1; i++)
     {
-        WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 0, COLOR_ID_BAR_WHITE);
+        WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 0, COLOR_ID_BAR_BLACK);
         WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 1, COLOR_ID_FILL_SHADOW + color * 2);
         WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 2, COLOR_ID_FILL + color * 2);
         WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 3, COLOR_ID_FILL + color * 2);
-        WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 4, COLOR_ID_BAR_WHITE);
+        WritePixel(dst, STAT_BAR_X_OFFSET + i, y + 4, COLOR_ID_BAR_BLACK);
     }
 }
 static const u8 sBaseStatOffsets[] =
@@ -4267,8 +4267,8 @@ static void PrintInfoScreenTextWhite(const u8* str, u8 left, u8 top)
 {
     u8 color[3];
     color[0] = TEXT_COLOR_TRANSPARENT;
-    color[1] = TEXT_COLOR_WHITE;
-    color[2] = TEXT_DYNAMIC_COLOR_6;
+    color[1] = TEXT_DYNAMIC_COLOR_6;
+    color[2] = TEXT_COLOR_LIGHT_GRAY;
 
     AddTextPrinterParameterized4(0, FONT_NORMAL, left, top, 0, 0, color, TEXT_SKIP_DRAW, str);
 }
@@ -4285,8 +4285,8 @@ static void UNUSED PrintInfoScreenTextSmallWhite(const u8* str, u8 left, u8 top)
 {
     u8 color[3];
     color[0] = TEXT_COLOR_TRANSPARENT;
-    color[1] = TEXT_COLOR_WHITE;
-    color[2] = TEXT_DYNAMIC_COLOR_6;
+    color[1] = TEXT_DYNAMIC_COLOR_6;
+    color[2] = TEXT_COLOR_LIGHT_GRAY;
 
     AddTextPrinterParameterized4(0, 0, left, top, 0, 0, color, 0, str);
 }
@@ -4304,8 +4304,8 @@ static void PrintStatsScreenTextSmallWhite(u8 windowId, const u8* str, u8 left, 
 {
     u8 color[3];
     color[0] = TEXT_COLOR_TRANSPARENT;
-    color[1] = TEXT_COLOR_WHITE;
-    color[2] = TEXT_DYNAMIC_COLOR_6;
+    color[1] = TEXT_DYNAMIC_COLOR_6;
+    color[2] = TEXT_COLOR_LIGHT_GRAY;
 
     AddTextPrinterParameterized4(windowId, 0, left, top, 0, 0, color, 0, str);
 }
