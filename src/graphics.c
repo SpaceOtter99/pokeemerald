@@ -1990,6 +1990,7 @@ const u16 gTilesetPalettes_General[][16] =
 };
 
 const u32 gTilesetTiles_General[] = INCBIN_U32("data/tilesets/primary/general/tiles.4bpp.lz");
+const u32 gTilesetTiles_Wild[] = INCBIN_U32("data/tilesets/primary/wild/tiles.4bpp.lz");
 
 // trade/egg hatch
 

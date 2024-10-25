@@ -221,6 +221,17 @@ $(TILESETGFXDIR)/secondary/battle_frontier_ranking_hall/tiles.4bpp: %.4bpp: %.pn
 $(TILESETGFXDIR)/secondary/mystery_events_house/tiles.4bpp: %.4bpp: %.png
 	$(GFX) $< $@ -num_tiles 509 -Wnum_tiles
 
+$(TILESETGFXDIR)/primary/wild/Top.png $(TILESETGFXDIR)/primary/wild/Middle.png $(TILESETGFXDIR)/primary/wild/Bottom.png: %.xcf
+	echo $* $@ $% $!
+	$(XCF) $< 'Top' -o $(dir $<)Top.png
+	$(XCF) $< 'Middle' -o $(dir $<)Middle.png
+	$(XCF) $< 'Bottom' -o $(dir $<)Bottom.png
+
+$(TILESETGFXDIR)/primary/wild/tiles.png: $(TILESETGFXDIR)/primary/wild/Top.png $(TILESETGFXDIR)/primary/wild/Middle.png $(TILESETGFXDIR)/primary/wild/Bottom.png
+	$(PORYTILE) compile-primary -Wall -o $(dirname $@) include/constants/metatile_behaviors.h
+
+$(TILESETGFXDIR)/primary/wild/tiles.4bpp: $(TILESETGFXDIR)/primary/wild/tiles.png
+	$(GFX) $< $@ -num_tiles 509 -Wnum_tiles
 
 
 ### Fonts ###
